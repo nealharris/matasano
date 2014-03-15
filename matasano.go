@@ -109,25 +109,40 @@ func EnglishScore(b []byte) float64 {
 
 func FindSingleCharForXor(b []byte) byte {
 	bestScore := float64(-1)
-	bestChar := 'a'
+	var bestChar byte
 
-	for ch := 'a'; ch <= 'z'; ch++ {
+	for ch := 0; ch <= 255; ch++ {
 		Xored, _ := SingleCharXor(byte(ch), b)
 		currentScore := EnglishScore(Xored)
 		if currentScore < bestScore || bestScore < 0 {
 			bestScore = currentScore
-			bestChar = ch
-		}
-	}
-
-	for ch := 'A'; ch <= 'Z'; ch++ {
-		Xored, _ := SingleCharXor(byte(ch), b)
-		currentScore := EnglishScore(Xored)
-		if currentScore < bestScore || bestScore < 0 {
-			bestScore = currentScore
-			bestChar = ch
+			bestChar = byte(ch)
 		}
 	}
 
 	return byte(bestChar)
+}
+
+func DetectSingleCharXor(candidates [][]byte) ([]byte, byte) {
+	bestScore := float64(-1)
+	var bestString []byte
+	var bestChar byte
+
+	for i := 0; i < len(candidates); i++ {
+		if len(candidates[i]) == 0 {
+			continue
+		}
+
+		ch := FindSingleCharForXor(candidates[i])
+		Xored, _ := SingleCharXor(ch, candidates[i])
+		score := EnglishScore(Xored)
+
+		if score < bestScore || bestScore < 0 {
+			bestScore = score
+			bestString = candidates[i]
+			bestChar = ch
+		}
+	}
+
+	return bestString, bestChar
 }
