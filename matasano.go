@@ -174,3 +174,21 @@ func HammingDistance(b1, b2 []byte) (int, error) {
 
 	return hd, nil
 }
+
+func FindBestKeysize(b []byte, min, max int) int {
+	currentBestNormalizedHammingDistance := float64(-1)
+	currentBestKeyLength := 0
+	for i := min; i <= max; i ++ {
+		if 2*i > len(b) {
+			break
+		}
+		hd, _ := HammingDistance(b[0:i], b[i:2*i])
+		normalized := float64(hd)/float64(i)
+		if normalized < currentBestNormalizedHammingDistance || currentBestNormalizedHammingDistance < 0 {
+			currentBestNormalizedHammingDistance = normalized
+			currentBestKeyLength = i
+		}
+	}
+
+	return currentBestKeyLength
+}
