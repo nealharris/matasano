@@ -175,7 +175,7 @@ func HammingDistance(b1, b2 []byte) (int, error) {
 	return hd, nil
 }
 
-func FindBestKeysize(b []byte, min, max int) int {
+func FindBestKeySize(b []byte, min, max int) int {
 	currentBestNormalizedHammingDistance := float64(-1)
 	currentBestKeyLength := 0
 	for i := min; i <= max; i ++ {
@@ -184,6 +184,7 @@ func FindBestKeysize(b []byte, min, max int) int {
 		}
 		hd, _ := HammingDistance(b[0:i], b[i:2*i])
 		normalized := float64(hd)/float64(i)
+		fmt.Println(i, normalized)
 		if normalized < currentBestNormalizedHammingDistance || currentBestNormalizedHammingDistance < 0 {
 			currentBestNormalizedHammingDistance = normalized
 			currentBestKeyLength = i
@@ -192,3 +193,23 @@ func FindBestKeysize(b []byte, min, max int) int {
 
 	return currentBestKeyLength
 }
+
+func Transpose(b []byte, blockSize int) [][]byte {
+	leftover := len(b) % blockSize
+	defaultLength := len(b) / blockSize
+	blocks := make([][]byte, blockSize)
+	for index,_ := range blocks {
+		if index < leftover {
+			blocks[index] = make([]byte, defaultLength + 1)
+		} else {
+			blocks[index] = make([]byte, defaultLength)
+		}
+	}
+
+	for index,element := range b {
+		blocks[index % blockSize][index / blockSize] = element
+	}
+
+	return blocks
+}
+
