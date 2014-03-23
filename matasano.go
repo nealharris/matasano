@@ -158,3 +158,19 @@ func RepeatingKeyXor(key, plaintext []byte) []byte {
 	result, _ := Xor(extendedKey, plaintext)
 	return result
 }
+
+func HammingDistance(b1, b2 []byte) (int, error) {
+	hd := 0
+	if len(b1) != len(b2) {
+		return 0, errors.New("cannot xor byte arrays of different lengths")
+	}
+	for i := 0; i < len(b1); i++ {
+		for xor := b1[i] ^ b2[i]; xor != 0; xor = xor >> 1 {
+			if xor & 1 != 0 {
+				hd++
+			}
+		}
+	}
+
+	return hd, nil
+}
