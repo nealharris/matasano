@@ -146,3 +146,15 @@ func DetectSingleCharXor(candidates [][]byte) ([]byte, byte) {
 
 	return bestString, bestChar
 }
+
+func ExtendByteArray(b []byte, length int) []byte {
+	currentLength := len(b)
+	extended := bytes.Repeat(b, length/currentLength)
+	return append(extended, b[0:length % currentLength]...)
+}
+
+func RepeatingKeyXor(key, plaintext []byte) []byte {
+	extendedKey := ExtendByteArray(key, len(plaintext))
+	result, _ := Xor(extendedKey, plaintext)
+	return result
+}
