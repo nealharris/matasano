@@ -1,6 +1,6 @@
 package matasano
 
-//import "crypto"
+import "crypto/aes"
 import "encoding/base64"
 import "encoding/hex"
 import "fmt"
@@ -218,3 +218,14 @@ func Transpose(b []byte, blockSize int) [][]byte {
 	return blocks
 }
 
+func EcbDecrypt(key, ct []byte) []byte {
+	cipher, _ := aes.NewCipher(key)
+	numBlocks := len(ct)/16
+	pt := make([]byte, len(ct))
+
+	for i := 0; i < numBlocks; i++ {
+		cipher.Decrypt(pt[16*i:16*(i+1)], ct[16*i:16*(i+1)])
+	}
+
+	return pt
+}
