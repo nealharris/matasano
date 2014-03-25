@@ -179,12 +179,17 @@ func FindBestKeySize(b []byte, min, max int) int {
 	currentBestNormalizedHammingDistance := float64(-1)
 	currentBestKeyLength := 0
 	for i := min; i <= max; i ++ {
-		if 2*i > len(b) {
+		if 4*i > len(b) {
 			break
 		}
-		hd, _ := HammingDistance(b[0:i], b[i:2*i])
-		normalized := float64(hd)/float64(i)
-		fmt.Println(i, normalized)
+		hd1, _ := HammingDistance(b[0:i], b[i:2*i])
+		hd2, _ := HammingDistance(b[0:i], b[2*i:3*i])
+		hd3, _ := HammingDistance(b[0:i], b[3*i:4*i])
+		hd4, _ := HammingDistance(b[i:2*i], b[2*i:3*i])
+		hd5, _ := HammingDistance(b[i:2*i], b[3*i:4*i])
+		hd6, _ := HammingDistance(b[2*i:3*i], b[3*i:4*i])
+		normalized := float64(hd1 + hd2 + hd3 + hd4 + hd5 + hd6)/float64(i)
+
 		if normalized < currentBestNormalizedHammingDistance || currentBestNormalizedHammingDistance < 0 {
 			currentBestNormalizedHammingDistance = normalized
 			currentBestKeyLength = i
