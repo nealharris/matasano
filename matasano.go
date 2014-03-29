@@ -229,3 +229,39 @@ func EcbDecrypt(key, ct []byte) []byte {
 
 	return pt
 }
+
+func HasRepeatedBlock(ct []byte, blockSize int) bool {
+	blocks := SplitIntoBlocks(ct, blockSize)
+	set := make(map[string]bool)
+	for _, block := range blocks {
+		if set[string(block)] {
+			return true
+		}
+		set[string(block)] = true
+	}
+
+	return false
+}
+
+func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
+	l := len(b)
+	var res [][]byte
+	if l % blockSize != 0 {
+		res = make([][]byte, l/blockSize + 1)
+	} else {
+		res = make([][]byte, l/blockSize)
+	}
+
+	for i := 0; i < len(res); i++ {
+		res[i] = make([]byte, blockSize)
+		for j := 0; j < blockSize; j++ {
+			if i*blockSize + j >= len(b) {
+				return res
+			} else {
+				res[i][j] = b[i*blockSize + j]
+			}
+		}
+	}
+
+	return res
+}
