@@ -29,7 +29,7 @@ func B64ToHex(s string) (string, error) {
 
 func Xor(b1 []byte, b2 []byte) ([]byte, error) {
 	if len(b1) != len(b2) {
-		return nil, errors.New("byte arrays not the same length!") 
+		return nil, errors.New("byte arrays not the same length!")
 	}
 
 	result := make([]byte, len(b1))
@@ -101,7 +101,7 @@ func EnglishScore(b []byte) float64 {
 		} else {
 			score += freqs[ch]
 		}
-		
+
 	}
 
 	return score
@@ -264,4 +264,17 @@ func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 	}
 
 	return res
+}
+
+func PKCS7Pad(b []byte, size int) []byte {
+	padding := size - len(b)
+
+	result := make([]byte, size)
+	copy(result, b)
+
+	for i := len(b); i < len(result); i++ {
+		result[i] = byte(padding)
+	}
+
+	return result
 }
