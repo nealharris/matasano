@@ -267,14 +267,14 @@ func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 }
 
 func PKCS7Pad(b []byte, size int) []byte {
-	padding := size - len(b)
+        padding := size - len(b)
 
-	result := make([]byte, size)
-	copy(result, b)
+        result := make([]byte, size)
+        copy(result, b)
 
-	for i := len(b); i < len(result); i++ {
-		result[i] = byte(padding)
-	}
+        for i := len(b); i < len(result); i++ {
+                result[i] = byte(padding)
+        }
 
-	return result
+        return result
 }
