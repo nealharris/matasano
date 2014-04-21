@@ -300,3 +300,50 @@ func PKCS7Pad(b []byte, size int) []byte {
 
         return result
 }
+
+func CbcEncrypt(key, pt, iv []byte) []byte {
+	numBlocks := len(pt) / 16
+	if len(pt) % 16 != 0 {
+		numBlocks++
+	}
+	ct := make([]byte, numBlocks*16)
+	paddedPt := make([]byte, numBlocks*16)
+	copy(paddedPt, pt)
+
+	next_xor := iv
+	cipher,_ := aes.NewCipher(key)
+
+	var xored []byte
+	for i := 0; i < numBlocks; i++ {
+		xored,_ = Xor(next_xor,  paddedPt[16*i:16*(i+1)])
+		cipher.Encrypt(ct[16*i:16*(i+1)], xored)
+		next_xor = ct[16*i:16*(i+1)]
+	}
+
+	return ct
+}
+
+func CbcDecrypt(key, ct, iv []byte) []byte {
+	numBlocks := len(ct) / 16
+	if len(ct) % 16 != 0 {
+		numBlocks++
+	}
+	pt := make([]byte, numBlocks*16)
+
+	cipher,_ := aes.NewCipher(key)
+
+	preXor := make([]byte, 16)
+
+	for i := 0; i < numBlocks; i++ {
+		cipher.Decrypt(preXor, ct[16*i:16*(i+1)])
+		if (i > 0) {
+			xored,_ := Xor(preXor, ct[16*(i-1):16*i])
+			copy(pt[16*i:16*(i+1)], xored)
+		} else {
+			xored,_ := Xor(preXor, iv)
+			copy(pt[0:16], xored)
+		}
+	}
+
+	return pt
+}
