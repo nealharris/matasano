@@ -230,6 +230,28 @@ func EcbDecrypt(key, ct []byte) []byte {
 	return pt
 }
 
+func EcbEncrypt(key, pt []byte) []byte {
+	// first, pad plaintext with null bytes
+	var paddedPt []byte
+	leftOver := len(pt) % 16
+	if leftOver != 0 {
+	  paddedPt = make([]byte, len(pt) + 16 - leftOver)
+	} else {
+	  paddedPt = make([]byte, len(pt))
+	}
+	copy(paddedPt, pt)
+
+	cipher, _ := aes.NewCipher(key)
+	numBlocks := len(paddedPt)/16
+	ct := make([]byte, numBlocks*16)
+
+	for i := 0; i < numBlocks; i++ {
+		cipher.Encrypt(ct[16*i:16*(i+1)], paddedPt[16*i:16*(i+1)])
+	}
+
+	return ct
+}
+
 func HasRepeatedBlock(ct []byte, blockSize int) bool {
 	blocks := SplitIntoBlocks(ct, blockSize)
 	set := make(map[string]bool)
