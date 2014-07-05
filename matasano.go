@@ -5,9 +5,10 @@ import "encoding/base64"
 import "encoding/hex"
 import "fmt"
 import "errors"
-//import "strings"
 import "math"
 import "bytes"
+import "crypto/rand"
+import "math/big"
 
 func HexToB64(s string) (string, error) {
 	bytes, err := hex.DecodeString(s)
@@ -346,4 +347,27 @@ func CbcDecrypt(key, ct, iv []byte) []byte {
 	}
 
 	return pt
+}
+
+// The following method will use a randomly generated key to encrypt
+// the input plaintext under either CBC or ECB mode (determined by a coin toss).
+func EncryptionOracle(pt []byte) []byte {
+	var ct []byte
+	key := make([]byte, 16)
+	rand.Read(key)
+
+	cryptoModeFlag, _ := rand.Int(rand.Reader, big.NewInt(2))
+	if cryptoModeFlag.Cmp(big.NewInt(0)) == 0  {
+		// Do ECB
+		fmt.Println("Doing ECB")
+		ct = EcbEncrypt(key, pt)
+	} else {
+		// Do CBC
+		fmt.Println("Doing CBC")
+		iv := make([]byte, 16)
+		rand.Read(iv)
+		ct = CbcEncrypt(key, pt, iv)
+	}
+
+	return ct
 }
