@@ -1,14 +1,18 @@
 package matasano
 
-import "crypto/aes"
-import "encoding/base64"
-import "encoding/hex"
-import "fmt"
-import "errors"
-import "math"
-import "bytes"
-import "crypto/rand"
-import "math/big"
+import (
+    "crypto/aes"
+    "encoding/base64"
+    "encoding/hex"
+    "fmt"
+    "errors"
+    "math"
+    "bytes"
+    cryptorand "crypto/rand"
+    mathrand "math/rand"
+    "time"
+    "reflect"
+)
 
 func HexToB64(s string) (string, error) {
 	bytes, err := hex.DecodeString(s)
