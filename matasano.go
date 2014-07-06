@@ -356,25 +356,11 @@ func CbcDecrypt(key, ct, iv []byte) []byte {
 // The following method will use a randomly generated key to encrypt
 // the input plaintext under either CBC or ECB mode (determined by a coin toss).
 func EncryptionOracle(pt []byte) ([]byte, int) {
-	mathrand.Seed(time.Now().Unix())
-
 	var ct []byte
 	key := make([]byte, 16)
 	cryptorand.Read(key)
 
-    MAX_ADDITIONAL_BYTES := 10
-    MIN_ADDITIONAL_BYTES := 5
-
-	numPrependBytes := mathrand.Intn(MAX_ADDITIONAL_BYTES - MIN_ADDITIONAL_BYTES) + MIN_ADDITIONAL_BYTES
-	numAppendBytes := mathrand.Intn(MAX_ADDITIONAL_BYTES - MIN_ADDITIONAL_BYTES) + MIN_ADDITIONAL_BYTES
-
-    prependBytes := make([]byte, numPrependBytes)
-    appendBytes := make([]byte, numAppendBytes)
-
-    cryptorand.Read(prependBytes)
-    cryptorand.Read(appendBytes)
-
-    pt = append(append(prependBytes, pt...), appendBytes...)
+    pt = PadWithRandomBytes(pt, 5, 10)
 
 	cryptoModeFlag := mathrand.Intn(2)
 	if cryptoModeFlag == 0  {
@@ -390,6 +376,20 @@ func EncryptionOracle(pt []byte) ([]byte, int) {
 	return ct, cryptoModeFlag
 }
 
+func PadWithRandomBytes(buffer []byte, min, max int) []byte {
+    mathrand.Seed(time.Now().Unix())
+    numPrependBytes := mathrand.Intn(max - min) + min
+    numAppendBytes := mathrand.Intn(max - min) + min
+
+    prependBytes := make([]byte, numPrependBytes)
+    appendBytes := make([]byte, numAppendBytes)
+
+    cryptorand.Read(prependBytes)
+    cryptorand.Read(appendBytes)
+
+    return append(append(prependBytes, buffer...), appendBytes...)
+}
+
 // Attempts to guess the mode for the EncryptionOracle
 // Returns a boolean describing whether or not it succeeded
 func GuessMode() bool {
@@ -397,9 +397,8 @@ func GuessMode() bool {
 	ct, actualMode := EncryptionOracle(pt)
 	guessedMode := 1
 	
-    blocks := make([][]byte, len(ct)/16)
+    blocks := SplitIntoBlocks(ct, 16)
 	for i := 0; i < len(ct)/16; i++ {
-		blocks[i] = ct[i*16:i*16+16]
 		if i > 0 && reflect.DeepEqual(blocks[i], blocks[i-1]) {
 			guessedMode = 0
 			break
