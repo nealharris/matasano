@@ -355,23 +355,67 @@ func CbcDecrypt(key, ct, iv []byte) []byte {
 
 // The following method will use a randomly generated key to encrypt
 // the input plaintext under either CBC or ECB mode (determined by a coin toss).
-func EncryptionOracle(pt []byte) []byte {
+func EncryptionOracle(pt []byte) ([]byte, int) {
+	mathrand.Seed(time.Now().Unix())
+
 	var ct []byte
 	key := make([]byte, 16)
-	rand.Read(key)
+	cryptorand.Read(key)
 
-	cryptoModeFlag, _ := rand.Int(rand.Reader, big.NewInt(2))
-	if cryptoModeFlag.Cmp(big.NewInt(0)) == 0  {
+    MAX_ADDITIONAL_BYTES := 10
+    MIN_ADDITIONAL_BYTES := 5
+
+	numPrependBytes := mathrand.Intn(MAX_ADDITIONAL_BYTES - MIN_ADDITIONAL_BYTES) + MIN_ADDITIONAL_BYTES
+	numAppendBytes := mathrand.Intn(MAX_ADDITIONAL_BYTES - MIN_ADDITIONAL_BYTES) + MIN_ADDITIONAL_BYTES
+
+    prependBytes := make([]byte, numPrependBytes)
+    appendBytes := make([]byte, numAppendBytes)
+
+    cryptorand.Read(prependBytes)
+    cryptorand.Read(appendBytes)
+
+    pt = append(append(prependBytes, pt...), appendBytes...)
+
+	cryptoModeFlag := mathrand.Intn(2)
+	if cryptoModeFlag == 0  {
 		// Do ECB
-		fmt.Println("Doing ECB")
 		ct = EcbEncrypt(key, pt)
 	} else {
 		// Do CBC
-		fmt.Println("Doing CBC")
 		iv := make([]byte, 16)
-		rand.Read(iv)
+		cryptorand.Read(iv)
 		ct = CbcEncrypt(key, pt, iv)
 	}
 
-	return ct
+	return ct, cryptoModeFlag
+}
+
+// Attempts to guess the mode for the EncryptionOracle
+// Returns a boolean describing whether or not it succeeded
+func GuessMode() bool {
+	pt := make([]byte, 64)
+	ct, actualMode := EncryptionOracle(pt)
+	guessedMode := 1
+	
+    blocks := make([][]byte, len(ct)/16)
+	for i := 0; i < len(ct)/16; i++ {
+		blocks[i] = ct[i*16:i*16+16]
+		if i > 0 && reflect.DeepEqual(blocks[i], blocks[i-1]) {
+			guessedMode = 0
+			break
+		}
+	}
+
+    if guessedMode == 0 {
+        fmt.Println("I'm guessing the Oracle used ECB mode.")
+    } else {
+        fmt.Println("I'm guessing the Oracle used CBC mode.")
+    }
+
+    if actualMode == 0 {
+        fmt.Println("The Oracle actually used ECB mode.")
+    } else {
+        fmt.Println("The Oracle actually used CBC mode.")
+    }
+	return (guessedMode == actualMode)
 }
