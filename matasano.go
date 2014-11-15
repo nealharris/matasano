@@ -1,17 +1,17 @@
 package matasano
 
 import (
-    "crypto/aes"
-    "encoding/base64"
-    "encoding/hex"
-    "fmt"
-    "errors"
-    "math"
-    "bytes"
-    cryptorand "crypto/rand"
-    mathrand "math/rand"
-    "time"
-    "reflect"
+	"bytes"
+	"crypto/aes"
+	cryptorand "crypto/rand"
+	"encoding/base64"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"math"
+	mathrand "math/rand"
+	"reflect"
+	"time"
 )
 
 func HexToB64(s string) (string, error) {
@@ -39,7 +39,7 @@ func Xor(b1 []byte, b2 []byte) ([]byte, error) {
 
 	result := make([]byte, len(b1))
 
-	for i := 0; i < len(b1); i ++ {
+	for i := 0; i < len(b1); i++ {
 		result[i] = b1[i] ^ b2[i]
 	}
 
@@ -58,8 +58,8 @@ func RuneFrequencies(b []byte) map[rune]float64 {
 	}
 
 	freqs := make(map[rune]float64)
-	for ch := range(counts) {
-		freqs[ch] = float64(counts[ch])/float64(len(b))
+	for ch := range counts {
+		freqs[ch] = float64(counts[ch]) / float64(len(b))
 	}
 
 	return freqs
@@ -69,40 +69,40 @@ func RuneFrequencies(b []byte) map[rune]float64 {
 func EnglishScore(b []byte) float64 {
 	// copied from http://en.wikipedia.org/wiki/Letter_frequency on 3/11/2014
 	expected_freqs := map[rune]float64{
-		'a':0.08167,
-		'b':0.01492,
-		'c':0.02782,
-		'd':0.04253,
-		'e':0.12702,
-		'f':0.02228,
-		'g':0.02015,
-		'h':0.06094,
-		'i':0.06966,
-		'j':0.00153,
-		'k':0.00772,
-		'l':0.04025,
-		'm':0.02406,
-		'n':0.06749,
-		'o':0.07507,
-		'p':0.01929,
-		'q':0.00095,
-		'r':0.05987,
-		's':0.06327,
-		't':0.09056,
-		'u':0.02758,
-		'v':0.00978,
-		'w':0.02360,
-		'x':0.00150,
-		'y':0.01974,
-		'z':0.00074,
+		'a': 0.08167,
+		'b': 0.01492,
+		'c': 0.02782,
+		'd': 0.04253,
+		'e': 0.12702,
+		'f': 0.02228,
+		'g': 0.02015,
+		'h': 0.06094,
+		'i': 0.06966,
+		'j': 0.00153,
+		'k': 0.00772,
+		'l': 0.04025,
+		'm': 0.02406,
+		'n': 0.06749,
+		'o': 0.07507,
+		'p': 0.01929,
+		'q': 0.00095,
+		'r': 0.05987,
+		's': 0.06327,
+		't': 0.09056,
+		'u': 0.02758,
+		'v': 0.00978,
+		'w': 0.02360,
+		'x': 0.00150,
+		'y': 0.01974,
+		'z': 0.00074,
 	}
 
 	score := float64(0)
 	freqs := RuneFrequencies(b)
 
-	for ch := range(freqs) {
+	for ch := range freqs {
 		if expectedFreq, ok := expected_freqs[ch]; ok {
-			score += math.Pow(freqs[ch] - expectedFreq, 2.0)
+			score += math.Pow(freqs[ch]-expectedFreq, 2.0)
 		} else {
 			score += freqs[ch]
 		}
@@ -155,7 +155,7 @@ func DetectSingleCharXor(candidates [][]byte) ([]byte, byte) {
 func ExtendByteArray(b []byte, length int) []byte {
 	currentLength := len(b)
 	extended := bytes.Repeat(b, length/currentLength)
-	return append(extended, b[0:length % currentLength]...)
+	return append(extended, b[0:length%currentLength]...)
 }
 
 func RepeatingKeyXor(key, plaintext []byte) []byte {
@@ -171,7 +171,7 @@ func HammingDistance(b1, b2 []byte) (int, error) {
 	}
 	for i := 0; i < len(b1); i++ {
 		for xor := b1[i] ^ b2[i]; xor != 0; xor = xor >> 1 {
-			if xor & 1 != 0 {
+			if xor&1 != 0 {
 				hd++
 			}
 		}
@@ -183,7 +183,7 @@ func HammingDistance(b1, b2 []byte) (int, error) {
 func FindBestKeySize(b []byte, min, max int) int {
 	currentBestNormalizedHammingDistance := float64(-1)
 	currentBestKeyLength := 0
-	for i := min; i <= max; i ++ {
+	for i := min; i <= max; i++ {
 		if 4*i > len(b) {
 			break
 		}
@@ -193,7 +193,7 @@ func FindBestKeySize(b []byte, min, max int) int {
 		hd4, _ := HammingDistance(b[i:2*i], b[2*i:3*i])
 		hd5, _ := HammingDistance(b[i:2*i], b[3*i:4*i])
 		hd6, _ := HammingDistance(b[2*i:3*i], b[3*i:4*i])
-		normalized := float64(hd1 + hd2 + hd3 + hd4 + hd5 + hd6)/float64(i)
+		normalized := float64(hd1+hd2+hd3+hd4+hd5+hd6) / float64(i)
 
 		if normalized < currentBestNormalizedHammingDistance || currentBestNormalizedHammingDistance < 0 {
 			currentBestNormalizedHammingDistance = normalized
@@ -208,16 +208,16 @@ func Transpose(b []byte, blockSize int) [][]byte {
 	leftover := len(b) % blockSize
 	defaultLength := len(b) / blockSize
 	blocks := make([][]byte, blockSize)
-	for index,_ := range blocks {
+	for index, _ := range blocks {
 		if index < leftover {
-			blocks[index] = make([]byte, defaultLength + 1)
+			blocks[index] = make([]byte, defaultLength+1)
 		} else {
 			blocks[index] = make([]byte, defaultLength)
 		}
 	}
 
-	for index,element := range b {
-		blocks[index % blockSize][index / blockSize] = element
+	for index, element := range b {
+		blocks[index%blockSize][index/blockSize] = element
 	}
 
 	return blocks
@@ -225,7 +225,7 @@ func Transpose(b []byte, blockSize int) [][]byte {
 
 func EcbDecrypt(key, ct []byte) []byte {
 	cipher, _ := aes.NewCipher(key)
-	numBlocks := len(ct)/16
+	numBlocks := len(ct) / 16
 	pt := make([]byte, len(ct))
 
 	for i := 0; i < numBlocks; i++ {
@@ -240,14 +240,14 @@ func EcbEncrypt(key, pt []byte) []byte {
 	var paddedPt []byte
 	leftOver := len(pt) % 16
 	if leftOver != 0 {
-	  paddedPt = make([]byte, len(pt) + 16 - leftOver)
+		paddedPt = make([]byte, len(pt)+16-leftOver)
 	} else {
-	  paddedPt = make([]byte, len(pt))
+		paddedPt = make([]byte, len(pt))
 	}
 	copy(paddedPt, pt)
 
 	cipher, _ := aes.NewCipher(key)
-	numBlocks := len(paddedPt)/16
+	numBlocks := len(paddedPt) / 16
 	ct := make([]byte, numBlocks*16)
 
 	for i := 0; i < numBlocks; i++ {
@@ -273,8 +273,8 @@ func HasRepeatedBlock(ct []byte, blockSize int) bool {
 func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 	l := len(b)
 	var res [][]byte
-	if l % blockSize != 0 {
-		res = make([][]byte, l/blockSize + 1)
+	if l%blockSize != 0 {
+		res = make([][]byte, l/blockSize+1)
 	} else {
 		res = make([][]byte, l/blockSize)
 	}
@@ -282,10 +282,10 @@ func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 	for i := 0; i < len(res); i++ {
 		res[i] = make([]byte, blockSize)
 		for j := 0; j < blockSize; j++ {
-			if i*blockSize + j >= len(b) {
+			if i*blockSize+j >= len(b) {
 				return res
 			} else {
-				res[i][j] = b[i*blockSize + j]
+				res[i][j] = b[i*blockSize+j]
 			}
 		}
 	}
@@ -294,21 +294,21 @@ func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 }
 
 func PKCS7Pad(b []byte, size int) []byte {
-        padding := size - len(b)
+	padding := size - len(b)
 
-        result := make([]byte, size)
-        copy(result, b)
+	result := make([]byte, size)
+	copy(result, b)
 
-        for i := len(b); i < len(result); i++ {
-                result[i] = byte(padding)
-        }
+	for i := len(b); i < len(result); i++ {
+		result[i] = byte(padding)
+	}
 
-        return result
+	return result
 }
 
 func CbcEncrypt(key, pt, iv []byte) []byte {
 	numBlocks := len(pt) / 16
-	if len(pt) % 16 != 0 {
+	if len(pt)%16 != 0 {
 		numBlocks++
 	}
 	ct := make([]byte, numBlocks*16)
@@ -316,13 +316,13 @@ func CbcEncrypt(key, pt, iv []byte) []byte {
 	copy(paddedPt, pt)
 
 	next_xor := iv
-	cipher,_ := aes.NewCipher(key)
+	cipher, _ := aes.NewCipher(key)
 
 	var xored []byte
 	for i := 0; i < numBlocks; i++ {
-		xored,_ = Xor(next_xor,  paddedPt[16*i:16*(i+1)])
+		xored, _ = Xor(next_xor, paddedPt[16*i:16*(i+1)])
 		cipher.Encrypt(ct[16*i:16*(i+1)], xored)
-		next_xor = ct[16*i:16*(i+1)]
+		next_xor = ct[16*i : 16*(i+1)]
 	}
 
 	return ct
@@ -330,22 +330,22 @@ func CbcEncrypt(key, pt, iv []byte) []byte {
 
 func CbcDecrypt(key, ct, iv []byte) []byte {
 	numBlocks := len(ct) / 16
-	if len(ct) % 16 != 0 {
+	if len(ct)%16 != 0 {
 		numBlocks++
 	}
 	pt := make([]byte, numBlocks*16)
 
-	cipher,_ := aes.NewCipher(key)
+	cipher, _ := aes.NewCipher(key)
 
 	preXor := make([]byte, 16)
 
 	for i := 0; i < numBlocks; i++ {
 		cipher.Decrypt(preXor, ct[16*i:16*(i+1)])
-		if (i > 0) {
-			xored,_ := Xor(preXor, ct[16*(i-1):16*i])
+		if i > 0 {
+			xored, _ := Xor(preXor, ct[16*(i-1):16*i])
 			copy(pt[16*i:16*(i+1)], xored)
 		} else {
-			xored,_ := Xor(preXor, iv)
+			xored, _ := Xor(preXor, iv)
 			copy(pt[0:16], xored)
 		}
 	}
@@ -360,10 +360,10 @@ func EncryptionOracle(pt []byte) ([]byte, int) {
 	key := make([]byte, 16)
 	cryptorand.Read(key)
 
-    pt = PadWithRandomBytes(pt, 5, 10)
+	pt = PadWithRandomBytes(pt, 5, 10)
 
 	cryptoModeFlag := mathrand.Intn(2)
-	if cryptoModeFlag == 0  {
+	if cryptoModeFlag == 0 {
 		// Do ECB
 		ct = EcbEncrypt(key, pt)
 	} else {
@@ -377,17 +377,17 @@ func EncryptionOracle(pt []byte) ([]byte, int) {
 }
 
 func PadWithRandomBytes(buffer []byte, min, max int) []byte {
-    mathrand.Seed(time.Now().Unix())
-    numPrependBytes := mathrand.Intn(max - min) + min
-    numAppendBytes := mathrand.Intn(max - min) + min
+	mathrand.Seed(time.Now().Unix())
+	numPrependBytes := mathrand.Intn(max-min) + min
+	numAppendBytes := mathrand.Intn(max-min) + min
 
-    prependBytes := make([]byte, numPrependBytes)
-    appendBytes := make([]byte, numAppendBytes)
+	prependBytes := make([]byte, numPrependBytes)
+	appendBytes := make([]byte, numAppendBytes)
 
-    cryptorand.Read(prependBytes)
-    cryptorand.Read(appendBytes)
+	cryptorand.Read(prependBytes)
+	cryptorand.Read(appendBytes)
 
-    return append(append(prependBytes, buffer...), appendBytes...)
+	return append(append(prependBytes, buffer...), appendBytes...)
 }
 
 // Attempts to guess the mode for the EncryptionOracle
@@ -396,8 +396,8 @@ func GuessMode() bool {
 	pt := make([]byte, 64)
 	ct, actualMode := EncryptionOracle(pt)
 	guessedMode := 1
-	
-    blocks := SplitIntoBlocks(ct, 16)
+
+	blocks := SplitIntoBlocks(ct, 16)
 	for i := 0; i < len(ct)/16; i++ {
 		if i > 0 && reflect.DeepEqual(blocks[i], blocks[i-1]) {
 			guessedMode = 0
@@ -405,16 +405,16 @@ func GuessMode() bool {
 		}
 	}
 
-    if guessedMode == 0 {
-        fmt.Println("I'm guessing the Oracle used ECB mode.")
-    } else {
-        fmt.Println("I'm guessing the Oracle used CBC mode.")
-    }
+	if guessedMode == 0 {
+		fmt.Println("I'm guessing the Oracle used ECB mode.")
+	} else {
+		fmt.Println("I'm guessing the Oracle used CBC mode.")
+	}
 
-    if actualMode == 0 {
-        fmt.Println("The Oracle actually used ECB mode.")
-    } else {
-        fmt.Println("The Oracle actually used CBC mode.")
-    }
+	if actualMode == 0 {
+		fmt.Println("The Oracle actually used ECB mode.")
+	} else {
+		fmt.Println("The Oracle actually used CBC mode.")
+	}
 	return (guessedMode == actualMode)
 }
