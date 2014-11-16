@@ -353,18 +353,25 @@ func CbcDecrypt(key, ct, iv []byte) []byte {
 	return pt
 }
 
+// Block cipher mode flags.
+const (
+	ECB = iota
+	CBC
+)
+
+type oracle func(pt []byte) (ct []byte)
+
 // The following method will use a randomly generated key to encrypt
 // the input plaintext under either CBC or ECB mode (determined by a coin toss).
-func EncryptionOracle(pt []byte) ([]byte, int) {
+func EncryptionOracle(pt []byte) []byte {
 	var ct []byte
 	key := make([]byte, 16)
 	cryptorand.Read(key)
 
 	pt = PadWithRandomBytes(pt, 5, 10)
 
-	cryptoModeFlag := mathrand.Intn(2)
-	if cryptoModeFlag == 0 {
-		// Do ECB
+	blockCipherMode := mathrand.Intn(2)
+	if blockCipherMode == ECB {
 		ct = EcbEncrypt(key, pt)
 	} else {
 		// Do CBC
@@ -373,7 +380,7 @@ func EncryptionOracle(pt []byte) ([]byte, int) {
 		ct = CbcEncrypt(key, pt, iv)
 	}
 
-	return ct, cryptoModeFlag
+	return ct
 }
 
 func PadWithRandomBytes(buffer []byte, min, max int) []byte {
