@@ -34,7 +34,7 @@ func B64ToHex(s string) (string, error) {
 
 func Xor(b1 []byte, b2 []byte) ([]byte, error) {
 	if len(b1) != len(b2) {
-		return nil, errors.New("byte arrays not the same length!")
+		return nil, errors.New("byte arrays not the same length")
 	}
 
 	result := make([]byte, len(b1))
@@ -68,7 +68,7 @@ func RuneFrequencies(b []byte) map[rune]float64 {
 // lower score means more likely to be English
 func EnglishScore(b []byte) float64 {
 	// copied from http://en.wikipedia.org/wiki/Letter_frequency on 3/11/2014
-	expected_freqs := map[rune]float64{
+	expectedFreqs := map[rune]float64{
 		'a': 0.08167,
 		'b': 0.01492,
 		'c': 0.02782,
@@ -101,7 +101,7 @@ func EnglishScore(b []byte) float64 {
 	freqs := RuneFrequencies(b)
 
 	for ch := range freqs {
-		if expectedFreq, ok := expected_freqs[ch]; ok {
+		if expectedFreq, ok := expectedFreqs[ch]; ok {
 			score += math.Pow(freqs[ch]-expectedFreq, 2.0)
 		} else {
 			score += freqs[ch]
