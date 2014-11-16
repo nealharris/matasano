@@ -399,29 +399,18 @@ func PadWithRandomBytes(buffer []byte, min, max int) []byte {
 
 // Attempts to guess the mode for the EncryptionOracle
 // Returns a boolean describing whether or not it succeeded
-func GuessMode() bool {
+func EncryptionModeDetector(encryptor oracle) int {
 	pt := make([]byte, 64)
-	ct, actualMode := EncryptionOracle(pt)
-	guessedMode := 1
+	ct := encryptor(pt)
+	guessedMode := CBC
 
 	blocks := SplitIntoBlocks(ct, 16)
 	for i := 0; i < len(ct)/16; i++ {
 		if i > 0 && reflect.DeepEqual(blocks[i], blocks[i-1]) {
-			guessedMode = 0
+			guessedMode = ECB
 			break
 		}
 	}
 
-	if guessedMode == 0 {
-		fmt.Println("I'm guessing the Oracle used ECB mode.")
-	} else {
-		fmt.Println("I'm guessing the Oracle used CBC mode.")
-	}
-
-	if actualMode == 0 {
-		fmt.Println("The Oracle actually used ECB mode.")
-	} else {
-		fmt.Println("The Oracle actually used CBC mode.")
-	}
-	return (guessedMode == actualMode)
+	return guessedMode
 }
