@@ -363,7 +363,7 @@ type oracle func(pt []byte) (ct []byte)
 
 // The following method will use a randomly generated key to encrypt
 // the input plaintext under either CBC or ECB mode (determined by a coin toss).
-func EncryptionOracle(pt []byte) []byte {
+func EncryptionOracleCoinToss(pt []byte) []byte {
 	var ct []byte
 	key := make([]byte, 16)
 	cryptorand.Read(key)
@@ -413,4 +413,43 @@ func EncryptionModeDetector(encryptor oracle) int {
 	}
 
 	return guessedMode
+}
+
+const fixedKeyString = "b80b215a9d87206e3fb1d40baf255a81"
+const targetB64PlainText = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRv" +
+	"d24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBv" +
+	"biBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQg" +
+	"eW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
+
+func ByteAtATimeECBEncryptor(pt []byte) []byte {
+	key, _ := hex.DecodeString(fixedKeyString)
+	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
+
+	return EcbEncrypt(key, append(pt, targetBytes...))
+}
+
+func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
+	oneByte := make([]byte, 1)
+	ct := encryptor(oneByte)
+	baseSize := len(ct)
+	blockSize := -1
+
+	for i := 2; i < 1000; i++ {
+		pt := make([]byte, i)
+		ct = encryptor(pt)
+		size1 := len(ct)
+		if size1 > baseSize {
+			for j := i + 1; j < 1000; j++ {
+				pt = make([]byte, j)
+				ct = encryptor(pt)
+				size2 := len(ct)
+				if size2 > size1 {
+					return j - i
+				}
+			}
+		}
+	}
+
+	// should error if blockSize is negative
+	return blockSize
 }
