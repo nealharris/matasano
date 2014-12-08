@@ -315,14 +315,14 @@ func CbcEncrypt(key, pt, iv []byte) []byte {
 	paddedPt := make([]byte, numBlocks*16)
 	copy(paddedPt, pt)
 
-	next_xor := iv
+	nextXor := iv
 	cipher, _ := aes.NewCipher(key)
 
 	var xored []byte
 	for i := 0; i < numBlocks; i++ {
-		xored, _ = Xor(next_xor, paddedPt[16*i:16*(i+1)])
+		xored, _ = Xor(nextXor, paddedPt[16*i:16*(i+1)])
 		cipher.Encrypt(ct[16*i:16*(i+1)], xored)
-		next_xor = ct[16*i : 16*(i+1)]
+		nextXor = ct[16*i : 16*(i+1)]
 	}
 
 	return ct
@@ -452,4 +452,74 @@ func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
 
 	// should error if blockSize is negative
 	return blockSize
+}
+
+func PaddedBuffer(l int) bytes.Buffer {
+	var buffer bytes.Buffer
+
+	for i := 0; i < l; i++ {
+		buffer.WriteString("a")
+	}
+
+	return buffer
+}
+
+func ChosenPlainTextDictionary(padding []byte, encryptor oracle) map[[16]byte]byte {
+	dict := make(map[[16]byte]byte)
+	pt := make([]byte, len(padding)+1)
+	copy(pt, padding)
+
+	for i := 0; i < 256; i++ {
+		pt[len(padding)] = byte(i)
+		ct := encryptor(pt)
+
+		var ctFirstBlock [16]byte
+		for j := 0; j < 16; j++ {
+			ctFirstBlock[j] = ct[j]
+		}
+
+		dict[ctFirstBlock] = byte(i)
+	}
+
+	return dict
+}
+
+func NextByte(known []byte, blockSize int, encryptor oracle) byte {
+	var paddingAdjustment int
+	paddingAdjustment = len(known) % blockSize
+	padding := PaddedBuffer(blockSize - 1 - paddingAdjustment)
+
+	untrimmedPayload := append(padding.Bytes(), known...)
+	payload := untrimmedPayload[len(untrimmedPayload)-blockSize+1 : len(untrimmedPayload)]
+
+	dict := ChosenPlainTextDictionary(payload, encryptor)
+
+	ct := encryptor(padding.Bytes())
+	targetBlock := len(known) / blockSize
+
+	var ctTargetBlock [16]byte
+	for i := 0; i < blockSize; i++ {
+		ctTargetBlock[i] = ct[(targetBlock*blockSize)+i]
+	}
+
+	return dict[ctTargetBlock]
+}
+
+func DecryptTarget(encryptor oracle, targetLength int) []byte {
+	known := make([]byte, 0, targetLength)
+
+	mode := EncryptionModeDetector(encryptor)
+	if mode != ECB {
+		return nil
+	}
+
+	blockSize := DiscoverBlockSizeOfEncryptionOracle(encryptor)
+	for i := 0; i < targetLength; i++ {
+		next := NextByte(known, blockSize, encryptor)
+		currentLength := len(known)
+		known = known[0 : currentLength+1]
+		known[currentLength] = next
+	}
+
+	return known
 }
