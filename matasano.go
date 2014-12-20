@@ -11,6 +11,7 @@ import (
 	"math"
 	mathrand "math/rand"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -525,6 +526,15 @@ func DecryptTarget(encryptor oracle, targetLength int) []byte {
 	return known
 }
 
+type User struct {
+	email, role string
+	uid         int
+}
+
+func (u User) Encode() string {
+	return "email=" + u.email + "&uid=" + string(u.uid) + "&role=" + u.role
+}
+
 func parseParamString(params string) map[string]string {
 	kvMap := make(map[string]string)
 	var tokens []string
@@ -536,4 +546,32 @@ func parseParamString(params string) map[string]string {
 	}
 
 	return kvMap
+}
+
+func UserFromParams(params string) User {
+	kvMap := parseParamString(params)
+	uid, _ := strconv.Atoi(kvMap["uid"])
+	return User{kvMap["email"], kvMap["role"], uid}
+}
+
+func ProfileFor(email string) string {
+	// Don't allow metacharacters in email
+	cleaned := strings.Replace(email, "=", "", -1)
+	cleaned = strings.Replace(cleaned, "&", "", -1)
+
+	u := User{cleaned, "user", 1}
+	return u.Encode()
+}
+
+func GenericEncryptionOracle(pt []byte) []byte {
+	key, _ := hex.DecodeString(fixedKeyString)
+	return EcbEncrypt(key, pt)
+}
+
+func DecryptAndParseProfile(ct []byte) User {
+	key, _ := hex.DecodeString(fixedKeyString)
+	pt := EcbDecrypt(key, ct)
+
+	paramString := string(pt[:])
+	return UserFromParams(paramString)
 }
