@@ -11,6 +11,7 @@ import (
 	"math"
 	mathrand "math/rand"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -522,4 +523,17 @@ func DecryptTarget(encryptor oracle, targetLength int) []byte {
 	}
 
 	return known
+}
+
+func parseParamString(params string) map[string]string {
+	kvMap := make(map[string]string)
+	var tokens []string
+
+	kvPairs := strings.Split(params, "&")
+	for _, kvPair := range kvPairs {
+		tokens = strings.Split(kvPair, "=")
+		kvMap[tokens[0]] = tokens[1]
+	}
+
+	return kvMap
 }
