@@ -532,7 +532,7 @@ type User struct {
 }
 
 func (u User) Encode() string {
-	return "email=" + u.email + "&uid=" + string(u.uid) + "&role=" + u.role
+	return "email=" + u.email + "&uid=" + strconv.Itoa(u.uid) + "&role=" + u.role
 }
 
 func parseParamString(params string) map[string]string {
