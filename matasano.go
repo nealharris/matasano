@@ -559,7 +559,7 @@ func ProfileFor(email string) string {
 	cleaned := strings.Replace(email, "=", "", -1)
 	cleaned = strings.Replace(cleaned, "&", "", -1)
 
-	u := User{cleaned, "user", 1}
+	u := User{cleaned, "user", 10}
 	return u.Encode()
 }
 
