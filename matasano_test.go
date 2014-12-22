@@ -49,3 +49,12 @@ func TestGetMetacharacterFreeCipherText(t *testing.T) {
 		t.Errorf("got %v", pt)
 	}
 }
+
+func TestCreateAdminProfileCipherText(t *testing.T) {
+	ct := CreateAdminProfileCipherText()
+	user := DecryptAndParseProfile(ct)
+
+	if user.role != "admin" {
+		t.Errorf("got %v", user.role)
+	}
+}

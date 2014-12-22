@@ -592,3 +592,16 @@ func GetMetacharacterFreeCipherText(pt string) []byte {
 	numBlocks := (len(paddedPt)) / 16
 	return encryptedProfile[16 : 16+16*(numBlocks)]
 }
+
+func CreateAdminProfileCipherText() []byte {
+	email1 := "neal@neal.admin"
+	profile1 := CreateEncryptedProfile(email1)
+	adminBlock := profile1[16:32] // decrypts to "admin&uid=10&rol"
+	endBlock := profile1[0:16]    // decrypts to "email=neal@neal."
+
+	email2 := "neal@neal.com"
+	profile2 := CreateEncryptedProfile(email2)
+	firstBlock := profile2[0:32] // decrypts to "email=neal@neal.com&uid=10&role="
+
+	return append(firstBlock, append(adminBlock, endBlock...)...)
+}
