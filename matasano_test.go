@@ -38,6 +38,13 @@ func TestParseParamString(t *testing.T) {
 	}
 }
 
+func TestUserEncode(t *testing.T) {
+	u := User{"neal@neal.neal", "user", 10}
+	if u.Encode() != "email=neal@neal.neal&uid=10&role=user" {
+		t.Errorf("got %s", u.Encode())
+	}
+}
+
 func TestGetMetacharacterFreeCipherText(t *testing.T) {
 	testString := "iam16ch"
 	key, _ := hex.DecodeString(fixedKeyString)
