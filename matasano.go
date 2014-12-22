@@ -583,15 +583,12 @@ func CreateEncryptedProfile(email string) []byte {
 
 // Uses CreateEncryptedProfile as an oracle for generating ciphertext.
 // Plaintext can't contain '=' or '&', since those get stripped by the encoder.
-// For inputs that have lengths *not* a multiple of 16, they will be padded at
-// the end with zero bytes.
 func GetMetacharacterFreeCipherText(pt string) []byte {
-	endPaddingLength := -len(pt) % 16
-	endPadding := string(make([]byte, endPaddingLength))
 	prePadding := "foobarbazz" // len("email=foobarbazz") == 16
+	paddedPt := string(PKCS7Pad([]byte(pt), 16))
 
-	encryptedProfile := CreateEncryptedProfile(prePadding + pt + endPadding)
+	encryptedProfile := CreateEncryptedProfile(prePadding + paddedPt)
 	// How many blocks of ciphertext do we need?
-	numBlocks := (len(pt) + endPaddingLength) / 16
+	numBlocks := (len(paddedPt)) / 16
 	return encryptedProfile[16 : 16+16*(numBlocks)]
 }
