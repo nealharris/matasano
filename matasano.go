@@ -575,3 +575,23 @@ func DecryptAndParseProfile(ct []byte) User {
 	paramString := string(pt[:])
 	return UserFromParams(paramString)
 }
+
+func CreateEncryptedProfile(email string) []byte {
+	encodedProfile := ProfileFor(email)
+	return GenericEncryptionOracle([]byte(encodedProfile))
+}
+
+// Uses CreateEncryptedProfile as an oracle for generating ciphertext.
+// Plaintext can't contain '=' or '&', since those get stripped by the encoder.
+// For inputs that have lengths *not* a multiple of 16, they will be padded at
+// the end with zero bytes.
+func GetMetacharacterFreeCipherText(pt string) []byte {
+	endPaddingLength := -len(pt) % 16
+	endPadding := string(make([]byte, endPaddingLength))
+	prePadding := "foobarbazz" // len("email=foobarbazz") == 16
+
+	encryptedProfile := CreateEncryptedProfile(prePadding + pt + endPadding)
+	// How many blocks of ciphertext do we need?
+	numBlocks := (len(pt) + endPaddingLength) / 16
+	return encryptedProfile[16 : 16+16*(numBlocks)]
+}

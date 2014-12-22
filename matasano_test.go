@@ -1,6 +1,7 @@
 package matasano
 
 import (
+	"encoding/hex"
 	"reflect"
 	"testing"
 )
@@ -33,5 +34,16 @@ func TestParseParamString(t *testing.T) {
 
 	if !eq {
 		t.Errorf("got %v", actual)
+	}
+}
+
+func TestGetMetacharacterFreeCipherText(t *testing.T) {
+	testString := "iam16charslong!!"
+	key, _ := hex.DecodeString(fixedKeyString)
+
+	ct := GetMetacharacterFreeCipherText(testString)
+	pt := EcbDecrypt(key, ct)
+	if string(pt) != testString {
+		t.Errorf("got %v", string(pt))
 	}
 }
