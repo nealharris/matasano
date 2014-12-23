@@ -113,3 +113,16 @@ func TestCbcAdminBitFlipperRemovesAdminString(t *testing.T) {
 		t.Errorf("was able to sneak in ';admin=true;'")
 	}
 }
+
+func TestForgeAdminCiphertext(t *testing.T) {
+	ct, iv := ForgeAdminCiphertext()
+	isAdmin, err := CbcBitFlipIsAdmin(ct, iv)
+
+	if err != nil {
+		t.Errorf("got an unexpected error: %v", err)
+	}
+
+	if !isAdmin {
+		t.Errorf("failed to get admin=true.  Here's the ct: %v", ct)
+	}
+}

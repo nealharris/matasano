@@ -672,3 +672,24 @@ func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
 
 	return strings.Contains(string(stripped), ";admin=true;"), nil
 }
+
+func ForgeAdminCiphertext() ([]byte, []byte) {
+	inputString := "hackdxadminxtrue"
+	targetString := "hackd;admin=true"
+	ct, iv := CbcBitFlipStringEncryptor(inputString)
+
+	tamperedCt := make([]byte, len(ct))
+	copy(tamperedCt, ct)
+
+	// target is in third block of ct
+	// need to xor 2nd block of ct with hackdxadminxtrue XOR hackd;admin=true
+	tamperMask, _ := Xor([]byte(inputString), []byte(targetString))
+	secondBlock := tamperedCt[16:32]
+	replacement, _ := Xor(tamperMask, secondBlock)
+
+	for i := 0; i < 16; i++ {
+		tamperedCt[i+16] = replacement[i]
+	}
+
+	return tamperedCt, iv
+}
