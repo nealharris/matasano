@@ -627,3 +627,15 @@ func CreateAdminProfileCipherText() []byte {
 
 	return append(firstBlock, append(adminBlock, endBlock...)...)
 }
+
+func StripPKCS7Padding(input []byte) ([]byte, error) {
+	lastByte := input[len(input)-1]
+	var i byte
+	for i = 0; i < lastByte; i++ {
+		if input[len(input)-1-int(i)] != lastByte {
+			return nil, errors.New("Invalid PKCS7 padding!")
+		}
+	}
+
+	return input[0 : len(input)-int(lastByte)], nil
+}

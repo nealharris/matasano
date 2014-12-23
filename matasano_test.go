@@ -86,3 +86,16 @@ func TestCreateAdminProfileCipherText(t *testing.T) {
 		t.Errorf("got %v", user.role)
 	}
 }
+
+func TestPKCS7PaddingStripper(t *testing.T) {
+	iceBytes := []byte("ICE ICE BABY\x04\x04\x04\x04")
+	stripped, err := StripPKCS7Padding(iceBytes)
+	expected := []byte("ICE ICE BABY")
+
+	if err != nil {
+		t.Errorf("got an error while stripping valid pkcs7 padding: %v", err)
+	}
+	if bytes.Compare(expected, stripped) != 0 {
+		t.Errorf("expected %v, but got %v when stripping padding", expected, stripped)
+	}
+}
