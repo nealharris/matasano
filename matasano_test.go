@@ -99,3 +99,17 @@ func TestPKCS7PaddingStripper(t *testing.T) {
 		t.Errorf("expected %v, but got %v when stripping padding", expected, stripped)
 	}
 }
+
+func TestCbcAdminBitFlipperRemovesAdminString(t *testing.T) {
+	adminString := ";admin=true;"
+	ct, iv := CbcBitFlipStringEncryptor(adminString)
+	containsAdmin, err := CbcBitFlipIsAdmin(ct, iv)
+
+	if err != nil {
+		t.Errorf("got an unexpected error: %v", err)
+	}
+
+	if containsAdmin {
+		t.Errorf("was able to sneak in ';admin=true;'")
+	}
+}

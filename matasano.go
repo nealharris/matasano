@@ -658,5 +658,17 @@ func CbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 	iv := make([]byte, 16)
 	cryptorand.Read(iv)
 
-	return iv, CbcEncrypt(key, padded, iv)
+	return CbcEncrypt(key, padded, iv), iv
+}
+
+func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
+	keyBytes, _ := hex.DecodeString(cbcBitFlipKey)
+	pt := CbcDecrypt(keyBytes, ct, iv)
+	stripped, err := StripPKCS7Padding(pt)
+
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(string(stripped), ";admin=true;"), nil
 }
