@@ -639,3 +639,22 @@ func StripPKCS7Padding(input []byte) ([]byte, error) {
 
 	return input[0 : len(input)-int(lastByte)], nil
 }
+
+func CbcBitFlipStringEncryptor(pt string) []byte {
+	// first, kill all ';' and '=' from the input
+	cleaned := strings.Replace(pt, ";", "", -1)
+	cleaned = strings.Replace(cleaned, "=", "", -1)
+
+	prefix := "comment1=cooking%20MCs;userdata="
+	suffix := ";comment2=%20like%20a%20pound%20of%20bacon"
+	bytes := []byte(prefix + cleaned + suffix)
+
+	lengthWithPadding := (len(bytes)/16 + 1) * 16
+	padded := PKCS7Pad(bytes, lengthWithPadding)
+
+	key, _ := hex.DecodeString("d93a79a26b07260aadd624813e9f113d")
+	iv := make([]byte, 16)
+	cryptorand.Read(iv)
+
+	return CbcEncrypt(key, padded, iv)
+}
