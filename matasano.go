@@ -14,34 +14,6 @@ import (
 	"time"
 )
 
-func ExtendByteArray(b []byte, length int) []byte {
-	currentLength := len(b)
-	extended := bytes.Repeat(b, length/currentLength)
-	return append(extended, b[0:length%currentLength]...)
-}
-
-func RepeatingKeyXor(key, plaintext []byte) []byte {
-	extendedKey := ExtendByteArray(key, len(plaintext))
-	result, _ := Xor(extendedKey, plaintext)
-	return result
-}
-
-func HammingDistance(b1, b2 []byte) (int, error) {
-	hd := 0
-	if len(b1) != len(b2) {
-		return 0, errors.New("cannot xor byte arrays of different lengths")
-	}
-	for i := 0; i < len(b1); i++ {
-		for xor := b1[i] ^ b2[i]; xor != 0; xor = xor >> 1 {
-			if xor&1 != 0 {
-				hd++
-			}
-		}
-	}
-
-	return hd, nil
-}
-
 func FindBestKeySize(b []byte, min, max int) int {
 	currentBestNormalizedHammingDistance := float64(-1)
 	currentBestKeyLength := 0
