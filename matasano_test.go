@@ -2,6 +2,7 @@ package matasano
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"reflect"
 	"testing"
@@ -18,6 +19,26 @@ func TestDiscoverBlockSizeOfEncryptionOracle(t *testing.T) {
 	size := DiscoverBlockSizeOfEncryptionOracle(ByteAtATimeECBEncryptor)
 	if size != 16 {
 		t.Errorf("got %v", size)
+	}
+}
+
+func TestByteAtATime(t *testing.T) {
+	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
+	var empytyPrefix []byte
+	pt := DecryptTarget(ByteAtATimeECBEncryptor, empytyPrefix, len(targetBytes))
+
+	if bytes.Compare(pt, targetBytes) != 0 {
+		t.Errorf("got %v, expected %v", pt, targetBytes)
+	}
+}
+
+func TestByteAtATimeTricky(t *testing.T) {
+	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
+	prefix, _ := base64.StdEncoding.DecodeString(prefixB64PlainText)
+
+	pt := DecryptTarget(ByteAtATimeECBEncryptorTricky, prefix, len(targetBytes))
+	if bytes.Compare(pt, targetBytes) != 0 {
+		t.Errorf("got %v, expected %v", pt, targetBytes)
 	}
 }
 

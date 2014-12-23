@@ -422,12 +422,22 @@ const targetB64PlainText = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRv" +
 	"d24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBv" +
 	"biBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQg" +
 	"eW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
+const prefixB64PlainText = "qUIxzVDdZPWIIcmTwuZ4Y15qrzwK"
 
 func ByteAtATimeECBEncryptor(pt []byte) []byte {
 	key, _ := hex.DecodeString(fixedKeyString)
 	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
 
 	return EcbEncrypt(key, append(pt, targetBytes...))
+}
+
+func ByteAtATimeECBEncryptorTricky(pt []byte) []byte {
+	key, _ := hex.DecodeString(fixedKeyString)
+	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
+	// throw in a fixed randomly-generated string to make life harder
+	prependBytes, _ := base64.StdEncoding.DecodeString(prefixB64PlainText)
+
+	return EcbEncrypt(key, append(prependBytes, append(pt, targetBytes...)...))
 }
 
 func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
@@ -466,48 +476,56 @@ func PaddedBuffer(l int) bytes.Buffer {
 	return buffer
 }
 
-func ChosenPlainTextDictionary(padding []byte, encryptor oracle) map[[16]byte]byte {
+func GetDictionaryForNextByte(encryptor oracle, prefixLength int, known []byte) map[[16]byte]byte {
+	paddingLength := ((16 - 1) - prefixLength - len(known)) % 16
+	if paddingLength < 0 {
+		paddingLength += 16
+	}
+
+	padding := PaddedBuffer(paddingLength)
+	shortPayload := append(padding.Bytes(), known...)
+	payload := make([]byte, len(shortPayload)+1)
+	copy(payload, shortPayload)
+
+	targetBlock := (prefixLength + len(payload)) / 16
+
 	dict := make(map[[16]byte]byte)
-	pt := make([]byte, len(padding)+1)
-	copy(pt, padding)
-
 	for i := 0; i < 256; i++ {
-		pt[len(padding)] = byte(i)
-		ct := encryptor(pt)
+		payload[len(payload)-1] = byte(i)
+		ct := encryptor(payload)
 
-		var ctFirstBlock [16]byte
+		var targetCtBlock [16]byte
 		for j := 0; j < 16; j++ {
-			ctFirstBlock[j] = ct[j]
+			targetCtBlock[j] = ct[16*(targetBlock-1)+j]
 		}
 
-		dict[ctFirstBlock] = byte(i)
+		dict[targetCtBlock] = byte(i)
 	}
 
 	return dict
 }
 
-func NextByte(known []byte, blockSize int, encryptor oracle) byte {
-	var paddingAdjustment int
-	paddingAdjustment = len(known) % blockSize
-	padding := PaddedBuffer(blockSize - 1 - paddingAdjustment)
+func NextByte(encryptor oracle, prefixLength int, known []byte) byte {
+	dict := GetDictionaryForNextByte(encryptor, prefixLength, known)
 
-	untrimmedPayload := append(padding.Bytes(), known...)
-	payload := untrimmedPayload[len(untrimmedPayload)-blockSize+1 : len(untrimmedPayload)]
+	paddingLength := ((16 - 1) - len(known) - prefixLength) % 16
+	if paddingLength < 0 {
+		paddingLength += 16
+	}
+	payload := PaddedBuffer(paddingLength)
 
-	dict := ChosenPlainTextDictionary(payload, encryptor)
-
-	ct := encryptor(padding.Bytes())
-	targetBlock := len(known) / blockSize
+	ct := encryptor(payload.Bytes())
+	targetBlockOffset := (prefixLength + len(payload.Bytes()) + len(known)) / 16
 
 	var ctTargetBlock [16]byte
-	for i := 0; i < blockSize; i++ {
-		ctTargetBlock[i] = ct[(targetBlock*blockSize)+i]
+	for i := 0; i < 16; i++ {
+		ctTargetBlock[i] = ct[16*(targetBlockOffset)+i]
 	}
 
 	return dict[ctTargetBlock]
 }
 
-func DecryptTarget(encryptor oracle, targetLength int) []byte {
+func DecryptTarget(encryptor oracle, prefix []byte, targetLength int) []byte {
 	known := make([]byte, 0, targetLength)
 
 	mode := EncryptionModeDetector(encryptor)
@@ -516,8 +534,12 @@ func DecryptTarget(encryptor oracle, targetLength int) []byte {
 	}
 
 	blockSize := DiscoverBlockSizeOfEncryptionOracle(encryptor)
+	if blockSize != 16 {
+		return nil
+	}
+
 	for i := 0; i < targetLength; i++ {
-		next := NextByte(known, blockSize, encryptor)
+		next := NextByte(encryptor, len(prefix), known)
 		currentLength := len(known)
 		known = known[0 : currentLength+1]
 		known[currentLength] = next
