@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	mathrand "math/rand"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -53,16 +52,22 @@ func PadWithRandomBytes(buffer []byte, min, max int) []byte {
 
 // Attempts to guess the mode for the EncryptionOracle
 // Returns a boolean describing whether or not it succeeded
-func EncryptionModeDetector(encryptor oracle) int {
+func OracleEncryptionModeDetector(encryptor oracle) int {
 	pt := make([]byte, 64)
 	ct := encryptor(pt)
+
+	return EncryptionModeDetector(ct)
+}
+
+func EncryptionModeDetector(ct []byte) int {
 	guessedMode := CBC
 
 	blocks := SplitIntoBlocks(ct, 16)
-	for i := 0; i < len(ct)/16; i++ {
-		if i > 0 && reflect.DeepEqual(blocks[i], blocks[i-1]) {
-			guessedMode = ECB
-			break
+	for i := 0; i < len(blocks) && guessedMode == CBC; i++ {
+		for j := 0; j < i && guessedMode == CBC; j++ {
+			if bytes.Compare(blocks[i], blocks[j]) == 0 {
+				guessedMode = ECB
+			}
 		}
 	}
 
@@ -180,7 +185,7 @@ func NextByte(encryptor oracle, prefixLength int, known []byte) byte {
 func DecryptTarget(encryptor oracle, prefix []byte, targetLength int) []byte {
 	known := make([]byte, 0, targetLength)
 
-	mode := EncryptionModeDetector(encryptor)
+	mode := OracleEncryptionModeDetector(encryptor)
 	if mode != ECB {
 		return nil
 	}
