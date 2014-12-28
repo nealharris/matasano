@@ -48,6 +48,8 @@ func Xor(b1 []byte, b2 []byte) ([]byte, error) {
 	return result, nil
 }
 
+// SingleCharXor takes a byte and byte array as input, xors the byte against
+// each element of the byte array, and returns the result.
 func SingleCharXor(b byte, s []byte) ([]byte, error) {
 	repeated := bytes.Repeat([]byte{b}, len(s))
 	return Xor(repeated, s)
