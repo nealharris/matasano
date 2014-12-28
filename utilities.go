@@ -55,23 +55,33 @@ func SingleCharXor(b byte, s []byte) ([]byte, error) {
 	return Xor(repeated, s)
 }
 
+// ExtendByteArray takes a byte array, and an integer-valued length, extends the
+// byte array to the length passed in, and returns the result.  For example:
+// ExtendByteArray([]byte{1,2,3}, 8) == {1,2,3,1,2,3,1,2}.
 func ExtendByteArray(b []byte, length int) []byte {
 	currentLength := len(b)
 	extended := bytes.Repeat(b, length/currentLength)
 	return append(extended, b[0:length%currentLength]...)
 }
 
+// RepeatingKeyXor takes key and plaintext (both []byte), xors the key against
+// the plaintext (extending the key as necessary), and returns the result. For
+// example, RepeatingKeyXor([]byte{1,2}, []byte{1,2,0}) == []byte{0,0,1}.
 func RepeatingKeyXor(key, plaintext []byte) []byte {
 	extendedKey := ExtendByteArray(key, len(plaintext))
 	result, _ := Xor(extendedKey, plaintext)
 	return result
 }
 
+// HammingDistance takes two byte arrays as input, and returns their Hamming
+// Distance (https://en.wikipedia.org/wiki/Hamming_distance).  Returns an error
+// if the byte arrays are not the same length.
 func HammingDistance(b1, b2 []byte) (int, error) {
-	hd := 0
 	if len(b1) != len(b2) {
 		return 0, errors.New("cannot xor byte arrays of different lengths")
 	}
+
+	hd := 0
 	for i := 0; i < len(b1); i++ {
 		for xor := b1[i] ^ b2[i]; xor != 0; xor = xor >> 1 {
 			if xor&1 != 0 {
