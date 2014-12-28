@@ -60,18 +60,11 @@ func OracleEncryptionModeDetector(encryptor oracle) int {
 }
 
 func EncryptionModeDetector(ct []byte) int {
-	guessedMode := CBC
-
-	blocks := SplitIntoBlocks(ct, 16)
-	for i := 0; i < len(blocks) && guessedMode == CBC; i++ {
-		for j := 0; j < i && guessedMode == CBC; j++ {
-			if bytes.Compare(blocks[i], blocks[j]) == 0 {
-				guessedMode = ECB
-			}
-		}
+	if HasRepeatedBlock(ct, 16) {
+		return ECB
+	} else {
+		return CBC
 	}
-
-	return guessedMode
 }
 
 const fixedKeyString = "b80b215a9d87206e3fb1d40baf255a81"
