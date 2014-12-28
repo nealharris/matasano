@@ -9,15 +9,19 @@ import (
 	"fmt"
 )
 
+// HexToB64 takes a string, hex-decodes it, encodes the result in base64, and
+// returns the result.  Returns an error if unable to hex-decode the input.
 func HexToB64(s string) (string, error) {
 	bytes, err := hex.DecodeString(s)
 	if err != nil {
-		fmt.Println("error: ", err)
+		fmt.Println("error decoding hex: ", err)
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(bytes), nil
 }
 
+// B64ToHex takes a string, base64-decodes it, encodes the result in hex, and
+// returns the result.  Returns an error if unable to base64-decode the input.
 func B64ToHex(s string) (string, error) {
 	bytes, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
@@ -27,6 +31,9 @@ func B64ToHex(s string) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
+// Xor takes two byte arrays of the same length, computes the compentwise xor
+// of the inputs, and returns the resulting array.  Returns an error if the
+// input arrays are not the same length.
 func Xor(b1 []byte, b2 []byte) ([]byte, error) {
 	if len(b1) != len(b2) {
 		return nil, errors.New("byte arrays not the same length")
