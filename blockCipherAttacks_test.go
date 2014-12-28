@@ -1,17 +1,55 @@
 package matasano
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"os"
 	"reflect"
 	"testing"
 )
 
-func TestEncryptionModeDetector(t *testing.T) {
-	mode := EncryptionModeDetector(ByteAtATimeECBEncryptor)
+func TestOracleEncryptionModeDetector(t *testing.T) {
+	mode := OracleEncryptionModeDetector(ByteAtATimeECBEncryptor)
 	if mode != ECB {
 		t.Errorf("guessed the wrong mode for the ByteAtATimeECBEncryptor")
+	}
+}
+
+func TestEncryptionModeDetector(t *testing.T) {
+	detectEcbFile, err := os.Open("detectEcb.txt")
+	if err != nil {
+		t.Errorf("error reading test file: %v", err)
+	}
+
+	defer detectEcbFile.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(detectEcbFile)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	var ctBytes []byte
+	var mode int
+	found := false
+	expectedIndex := 132
+
+	for index, element := range lines {
+		ctBytes, _ = hex.DecodeString(element)
+		mode = EncryptionModeDetector(ctBytes)
+		if mode == ECB {
+			found = true
+			if index != expectedIndex {
+				t.Errorf("found ecb at unexpected index: %v", index)
+			}
+		}
+
+	}
+
+	if !found {
+		t.Errorf("didn't find anything encrypted with ecb")
 	}
 }
 

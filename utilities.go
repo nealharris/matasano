@@ -110,6 +110,8 @@ func EcbEncrypt(key, pt []byte) []byte {
 
 func HasRepeatedBlock(ct []byte, blockSize int) bool {
 	blocks := SplitIntoBlocks(ct, blockSize)
+	// TODO: gross that we use strings here, but we need something comparable to
+	// make a hashmap.  WCDB.
 	set := make(map[string]bool)
 	for _, block := range blocks {
 		if set[string(block)] {
