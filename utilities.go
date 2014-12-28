@@ -121,10 +121,11 @@ func HasRepeatedBlock(ct []byte, blockSize int) bool {
 	// make a hashmap.  WCDB.
 	set := make(map[string]bool)
 	for _, block := range blocks {
-		if set[string(block)] {
+		key := string(block)
+		if set[key] {
 			return true
 		}
-		set[string(block)] = true
+		set[key] = true
 	}
 
 	return false
