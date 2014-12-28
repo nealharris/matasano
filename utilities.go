@@ -93,8 +93,15 @@ func HammingDistance(b1, b2 []byte) (int, error) {
 	return hd, nil
 }
 
-func EcbDecrypt(key, ct []byte) []byte {
-	cipher, _ := aes.NewCipher(key)
+// EcbDecrypt takes byte arrays for key and ciphertext, decrypts the ciphertext
+// with the key using AES in ecb mode, and returns the resulting plaintext.
+// The key-length must be either 16, 24, or 32 bytes in length; otherwise an
+// error will be returned.
+func EcbDecrypt(key, ct []byte) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(key)
+	if keyError != nil {
+		return nil, keyError
+	}
 	numBlocks := len(ct) / 16
 	pt := make([]byte, len(ct))
 
@@ -102,29 +109,33 @@ func EcbDecrypt(key, ct []byte) []byte {
 		cipher.Decrypt(pt[16*i:16*(i+1)], ct[16*i:16*(i+1)])
 	}
 
-	return pt
+	return pt, nil
 }
 
-func EcbEncrypt(key, pt []byte) []byte {
-	// first, pad plaintext with null bytes
-	var paddedPt []byte
-	leftOver := len(pt) % 16
-	if leftOver != 0 {
-		paddedPt = make([]byte, len(pt)+16-leftOver)
-	} else {
-		paddedPt = make([]byte, len(pt))
+// EcbDecrypt takes byte arrays for key and ciphertext, encrypts the plaintext
+// with the key using AES in ecb mode, and returns the resulting ciphertext.
+// The key-length must be either 16, 24, or 32 bytes in length; otherwise an
+// error will be returned.
+func EcbEncrypt(key, pt []byte) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(key)
+	if keyError != nil {
+		return nil, keyError
 	}
+
+	blockSize := 16
+	numBlocks := len(pt) / blockSize
+	if len(pt)%blockSize != 0 {
+		numBlocks++
+	}
+	paddedPt := make([]byte, blockSize*numBlocks)
 	copy(paddedPt, pt)
 
-	cipher, _ := aes.NewCipher(key)
-	numBlocks := len(paddedPt) / 16
-	ct := make([]byte, numBlocks*16)
-
+	ct := make([]byte, blockSize*numBlocks)
 	for i := 0; i < numBlocks; i++ {
-		cipher.Encrypt(ct[16*i:16*(i+1)], paddedPt[16*i:16*(i+1)])
+		cipher.Encrypt(ct[blockSize*i:blockSize*(i+1)], paddedPt[blockSize*i:blockSize*(i+1)])
 	}
 
-	return ct
+	return ct, nil
 }
 
 func HasRepeatedBlock(ct []byte, blockSize int) bool {

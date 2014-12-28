@@ -25,7 +25,7 @@ func EncryptionOracleCoinToss(pt []byte) []byte {
 
 	blockCipherMode := mathrand.Intn(2)
 	if blockCipherMode == ECB {
-		ct = EcbEncrypt(key, pt)
+		ct, _ = EcbEncrypt(key, pt)
 	} else {
 		// Do CBC
 		iv := make([]byte, 16)
@@ -77,8 +77,9 @@ const prefixB64PlainText = "qUIxzVDdZPWIIcmTwuZ4Y15qrzwK"
 func ByteAtATimeECBEncryptor(pt []byte) []byte {
 	key, _ := hex.DecodeString(fixedKeyString)
 	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
+	ct, _ := EcbEncrypt(key, append(pt, targetBytes...))
 
-	return EcbEncrypt(key, append(pt, targetBytes...))
+	return ct
 }
 
 func ByteAtATimeECBEncryptorTricky(pt []byte) []byte {
@@ -86,8 +87,9 @@ func ByteAtATimeECBEncryptorTricky(pt []byte) []byte {
 	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
 	// throw in a fixed randomly-generated string to make life harder
 	prependBytes, _ := base64.StdEncoding.DecodeString(prefixB64PlainText)
+	ct, _ := EcbEncrypt(key, append(prependBytes, append(pt, targetBytes...)...))
 
-	return EcbEncrypt(key, append(prependBytes, append(pt, targetBytes...)...))
+	return ct
 }
 
 func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
@@ -237,12 +239,13 @@ func ProfileFor(email string) string {
 
 func GenericEncryptionOracle(pt []byte) []byte {
 	key, _ := hex.DecodeString(fixedKeyString)
-	return EcbEncrypt(key, pt)
+	ct, _ := EcbEncrypt(key, pt)
+	return ct
 }
 
 func DecryptAndParseProfile(ct []byte) User {
 	key, _ := hex.DecodeString(fixedKeyString)
-	pt := EcbDecrypt(key, ct)
+	pt, _ := EcbDecrypt(key, ct)
 
 	paramString := string(pt[:])
 	return UserFromParams(paramString)
