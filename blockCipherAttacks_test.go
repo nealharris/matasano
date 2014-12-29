@@ -109,8 +109,10 @@ func TestGetMetacharacterFreeCipherText(t *testing.T) {
 	key, _ := hex.DecodeString(fixedKeyString)
 
 	ct := GetMetacharacterFreeCipherText(testString)
-	pt := EcbDecrypt(key, ct)
-	expectedPt := EcbDecrypt(key, EcbEncrypt(key, pt))
+	pt, _ := EcbDecrypt(key, ct)
+
+	expectedCt, _ := EcbEncrypt(key, pt)
+	expectedPt, _ := EcbDecrypt(key, expectedCt)
 	if bytes.Compare(pt, expectedPt) != 0 {
 		t.Errorf("got %v", pt)
 	}
