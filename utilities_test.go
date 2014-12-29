@@ -116,9 +116,20 @@ func TestEcbDecrypt(t *testing.T) {
 	}
 
 	key := []byte("YELLOW SUBMARINE")
-	ResultPt := EcbDecrypt(key, decodedCt[0:numCtBytes])
+	ResultPt, _ := EcbDecrypt(key, decodedCt[0:numCtBytes])
 
 	if bytes.Compare(decodedPt, ResultPt) != 0 {
 		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(ResultPt))
+	}
+}
+
+func TestHasRepeatedBlock(t *testing.T) {
+	bytes := []byte{1, 2, 3, 4, 1, 2, 5, 6}
+	if HasRepeatedBlock(bytes, 2) != true {
+		t.Errorf("Should have found repeated block of size 2 in %v", bytes)
+	}
+
+	if HasRepeatedBlock(bytes, 4) != false {
+		t.Errorf("Should not have found repeated block of size 4 in %v", bytes)
 	}
 }
