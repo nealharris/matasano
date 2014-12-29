@@ -112,7 +112,7 @@ func EcbDecrypt(key, ct []byte) ([]byte, error) {
 	return pt, nil
 }
 
-// EcbDecrypt takes byte arrays for key and ciphertext, encrypts the plaintext
+// EcbEncrypt takes byte arrays for key and ciphertext, encrypts the plaintext
 // with the key using AES in ecb mode, and returns the resulting ciphertext.
 // The key-length must be either 16, 24, or 32 bytes in length; otherwise an
 // error will be returned.
