@@ -183,6 +183,10 @@ func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 	return res
 }
 
+// PKCS7Pad takes a byte array and size (int) as input, pads the byte array to
+// length size with PKCS7 padding
+// (https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7)
+// and returns the result.
 func PKCS7Pad(b []byte, size int) []byte {
 	padding := size - len(b)
 
