@@ -175,9 +175,8 @@ func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 		for j := 0; j < blockSize; j++ {
 			if i*blockSize+j >= len(b) {
 				return res
-			} else {
-				res[i][j] = b[i*blockSize+j]
 			}
+			res[i][j] = b[i*blockSize+j]
 		}
 	}
 
