@@ -138,7 +138,7 @@ func EcbEncrypt(key, pt []byte) ([]byte, error) {
 	return ct, nil
 }
 
-// EcbEncrypt(key, pt) takes a byte array and blockSize int, and returns true or
+// HasRepeatedBlock takes a byte array and blockSize int, and returns true or
 // false, depending on whether the byte array contains duplicate blocks after
 // splitting it into blocks of size blockSize.
 func HasRepeatedBlock(ct []byte, blockSize int) bool {
