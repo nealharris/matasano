@@ -157,6 +157,10 @@ func HasRepeatedBlock(ct []byte, blockSize int) bool {
 	return false
 }
 
+// SplitIntoBlocks takes a byte array and blockSize, and returns an array of
+// byte arrays, all of length blockSize.  If the length of the byte array is not
+// a multiple of blockSize, then the last block of the result will be padded
+// with 0.
 func SplitIntoBlocks(b []byte, blockSize int) [][]byte {
 	l := len(b)
 	var res [][]byte
