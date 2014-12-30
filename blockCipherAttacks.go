@@ -322,6 +322,10 @@ func CreateAdminProfileCipherText() []byte {
 	return append(firstBlock, append(adminBlock, endBlock...)...)
 }
 
+// StripPKCS7Padding takes a byte array as input, strips off PKCS7 padding
+// (see https://en.wikipedia.org/wiki/Padding_%28cryptography%29#PKCS7),
+// and returns the result.  If the input does not have valid PKCS7 padding, an
+// error is returned.
 func StripPKCS7Padding(input []byte) ([]byte, error) {
 	lastByte := input[len(input)-1]
 	var i byte
