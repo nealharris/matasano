@@ -120,7 +120,10 @@ func TestGetMetacharacterFreeCipherText(t *testing.T) {
 
 func TestCreateAdminProfileCipherText(t *testing.T) {
 	ct := CreateAdminProfileCipherText()
-	user := DecryptAndParseProfile(ct)
+	user, parseError := DecryptAndParseProfile(ct)
+	if parseError != nil {
+		t.Errorf("error parsing profile: %v", parseError)
+	}
 
 	if user.role != "admin" {
 		t.Errorf("got %v", user.role)
