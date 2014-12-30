@@ -145,6 +145,8 @@ func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
 	return -1
 }
 
+// PaddedBuffer takes an int as input, and returns a buffer of that length full
+// of "a".
 func PaddedBuffer(l int) bytes.Buffer {
 	var buffer bytes.Buffer
 
