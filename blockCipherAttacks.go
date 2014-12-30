@@ -365,6 +365,10 @@ func cbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 	return ct, iv
 }
 
+// ForgeAdminCiphertext performs the cbc bit-flipping attack described at
+// http://cryptopals.com/sets/2/challenges/16/ to generate ciphertext that will
+// decrypt and parse to a User with the admin role, without any knowledge of the
+// key used to generate the ciphertext.  Returns the ciphertext and iv.
 func ForgeAdminCiphertext() ([]byte, []byte) {
 	inputString := "hackdxadminxtrue"
 	targetString := "hackd;admin=true"
