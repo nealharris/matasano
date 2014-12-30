@@ -103,7 +103,7 @@ func TestEcbDecrypt(t *testing.T) {
 	}
 
 	key := []byte("YELLOW SUBMARINE")
-	ResultPt, _ := EcbDecrypt(key, decodedCt[0:numCtBytes])
+	resultPt, _ := EcbDecrypt(key, decodedCt[0:numCtBytes])
 
 	encodedExpectedPtBytes, ptReadErr := ioutil.ReadFile("ecbPlaintext.txt")
 	if ptReadErr != nil {
@@ -118,8 +118,8 @@ func TestEcbDecrypt(t *testing.T) {
 		t.Errorf("error decoding expected plaintext: %v", ptDecodeErr)
 	}
 
-	if bytes.Compare(decodedPt, ResultPt) != 0 {
-		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(ResultPt))
+	if bytes.Compare(decodedPt, resultPt) != 0 {
+		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(resultPt))
 	}
 }
 
