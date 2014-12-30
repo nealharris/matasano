@@ -2,6 +2,10 @@ package matasano
 
 import "math"
 
+// RuneFrequencies takes a byte array as input, and returns a map of runes to
+// floats.  The keys in the map are all of the runes that appeared in the byte
+// array, and the value for a rune is the relative frequency of that rune in
+// the byte array.
 func RuneFrequencies(b []byte) map[rune]float64 {
 	counts := make(map[rune]int)
 	for i := 0; i < len(b); i++ {
