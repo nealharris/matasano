@@ -133,3 +133,11 @@ func TestHasRepeatedBlock(t *testing.T) {
 		t.Errorf("Should not have found repeated block of size 4 in %v", bytes)
 	}
 }
+
+func TestPKCS7Pad(t *testing.T) {
+	unpadded := []byte{1, 1}
+	padded := PKCS7Pad(unpadded, 4)
+	if bytes.Compare(padded, []byte{1, 1, 2, 2}) != 0 {
+		t.Errorf("Incorrect padding.  Got: %v", padded)
+	}
+}
