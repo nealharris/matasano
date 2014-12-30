@@ -269,7 +269,7 @@ func userFromParams(params string) User {
 	return User{kvMap["email"], kvMap["role"], uid}
 }
 
-func ProfileFor(email string) string {
+func profileFor(email string) string {
 	// Don't allow metacharacters in email
 	cleaned := strings.Replace(email, "=", "", -1)
 	cleaned = strings.Replace(cleaned, "&", "", -1)
@@ -293,7 +293,7 @@ func DecryptAndParseProfile(ct []byte) User {
 }
 
 func CreateEncryptedProfile(email string) []byte {
-	encodedProfile := ProfileFor(email)
+	encodedProfile := profileFor(email)
 	return GenericEncryptionOracle([]byte(encodedProfile))
 }
 
