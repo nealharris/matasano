@@ -244,6 +244,8 @@ type User struct {
 	uid         int
 }
 
+// Encode returns a string representation of a User.  It's essentially just a
+// URI param string.
 func (u User) Encode() string {
 	return "email=" + u.email + "&uid=" + strconv.Itoa(u.uid) + "&role=" + u.role
 }
