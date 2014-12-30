@@ -263,7 +263,7 @@ func parseParamString(params string) map[string]string {
 	return kvMap
 }
 
-func UserFromParams(params string) User {
+func userFromParams(params string) User {
 	kvMap := parseParamString(params)
 	uid, _ := strconv.Atoi(kvMap["uid"])
 	return User{kvMap["email"], kvMap["role"], uid}
@@ -289,7 +289,7 @@ func DecryptAndParseProfile(ct []byte) User {
 	pt, _ := EcbDecrypt(key, ct)
 
 	paramString := string(pt[:])
-	return UserFromParams(paramString)
+	return userFromParams(paramString)
 }
 
 func CreateEncryptedProfile(email string) []byte {
