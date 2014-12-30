@@ -238,6 +238,7 @@ func DecryptTarget(encryptor oracle, prefix []byte, targetLength int) []byte {
 	return known
 }
 
+// User is an object used for http://cryptopals.com/sets/2/challenges/13/.
 type User struct {
 	email, role string
 	uid         int
