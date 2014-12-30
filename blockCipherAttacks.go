@@ -344,7 +344,7 @@ func StripPKCS7Padding(input []byte) ([]byte, error) {
 
 const cbcBitFlipKey = "d93a79a26b07260aadd624813e9f113d"
 
-func CbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
+func cbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 	// first, kill all ';' and '=' from the input
 	cleaned := strings.Replace(pt, ";", "", -1)
 	cleaned = strings.Replace(cleaned, "=", "", -1)
@@ -380,7 +380,7 @@ func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
 func ForgeAdminCiphertext() ([]byte, []byte) {
 	inputString := "hackdxadminxtrue"
 	targetString := "hackd;admin=true"
-	ct, iv := CbcBitFlipStringEncryptor(inputString)
+	ct, iv := cbcBitFlipStringEncryptor(inputString)
 
 	tamperedCt := make([]byte, len(ct))
 	copy(tamperedCt, ct)

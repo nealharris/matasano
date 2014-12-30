@@ -129,9 +129,9 @@ func TestPKCS7PaddingStripper(t *testing.T) {
 	}
 }
 
-func TestCbcAdminBitFlipperRemovesAdminString(t *testing.T) {
+func TestcbcAdminBitFlipperRemovesAdminString(t *testing.T) {
 	adminString := ";admin=true;"
-	ct, iv := CbcBitFlipStringEncryptor(adminString)
+	ct, iv := cbcBitFlipStringEncryptor(adminString)
 	containsAdmin, err := CbcBitFlipIsAdmin(ct, iv)
 
 	if err != nil {
