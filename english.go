@@ -89,6 +89,9 @@ func FindSingleCharForXor(b []byte) byte {
 	return byte(bestChar)
 }
 
+// DetectSingleCharXor takes an array of byte arrays, and returns the array
+// that was most likely encrypted with single-char-xor, along with the byte
+// that was most likely used as the key.
 func DetectSingleCharXor(candidates [][]byte) ([]byte, byte) {
 	bestScore := float64(-1)
 	var bestString []byte
