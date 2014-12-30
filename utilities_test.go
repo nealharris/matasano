@@ -180,6 +180,47 @@ func TestPKCS7Pad(t *testing.T) {
 	}
 }
 
+func TestCbcEncrypt(t *testing.T) {
+	e64 := base64.StdEncoding
+
+	ptBytes, ptReadErr := ioutil.ReadFile("cbcPlaintext.txt")
+	if ptReadErr != nil {
+		t.Errorf("error reading plaintext file: %v", ptReadErr)
+	}
+
+	maxPtLen := e64.DecodedLen(len(ptBytes))
+	decodedPt := make([]byte, maxPtLen)
+	_, ptDecodeErr := e64.Decode(decodedPt, ptBytes)
+
+	if ptDecodeErr != nil {
+		t.Errorf("error decoding plaintext: %v", ptDecodeErr)
+	}
+
+	key := []byte("YELLOW SUBMARINE")
+	iv := make([]byte, 16)
+	resultCt, encryptError := CbcEncrypt(key, decodedPt, iv)
+	if encryptError != nil {
+		t.Errorf("Error decrypting: %v", encryptError)
+	}
+
+	encodedExpectedCtBytes, ctReadErr := ioutil.ReadFile("cbcCiphertext.txt")
+	if ctReadErr != nil {
+		t.Errorf("error reading pt file: %v", ctReadErr)
+	}
+
+	maxCtLen := e64.DecodedLen(len(encodedExpectedCtBytes))
+	decodedCt := make([]byte, maxCtLen)
+	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, encodedExpectedCtBytes)
+
+	if ctDecodeErr != nil {
+		t.Errorf("error decoding expected plaintext: %v", ptDecodeErr)
+	}
+
+	if bytes.Compare(decodedCt[0:numCtBytes], resultCt) != 0 {
+		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedCt), e64.EncodeToString(resultCt))
+	}
+}
+
 func TestCbcDecrypt(t *testing.T) {
 	e64 := base64.StdEncoding
 
