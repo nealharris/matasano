@@ -157,7 +157,7 @@ func PaddedBuffer(l int) bytes.Buffer {
 	return buffer
 }
 
-func GetDictionaryForNextByte(encryptor oracle, prefixLength int, known []byte) map[[16]byte]byte {
+func getDictionaryForNextByte(encryptor oracle, prefixLength int, known []byte) map[[16]byte]byte {
 	paddingLength := ((16 - 1) - prefixLength - len(known)) % 16
 	if paddingLength < 0 {
 		paddingLength += 16
@@ -187,7 +187,7 @@ func GetDictionaryForNextByte(encryptor oracle, prefixLength int, known []byte) 
 }
 
 func NextByte(encryptor oracle, prefixLength int, known []byte) byte {
-	dict := GetDictionaryForNextByte(encryptor, prefixLength, known)
+	dict := getDictionaryForNextByte(encryptor, prefixLength, known)
 
 	paddingLength := ((16 - 1) - len(known) - prefixLength) % 16
 	if paddingLength < 0 {
