@@ -116,11 +116,15 @@ func ByteAtATimeECBEncryptorTricky(pt []byte) []byte {
 // oracle passed as input.  It does this by passing increasingly longer
 // plaintexts to the oracle, and observes when the length of the resulting
 // ciphertext increases.
+//
+// N.B.: this assumes the block-size of the oracle isn't that large (note the
+// value of 1000 used in the for-loops below.)
 func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
 	oneByte := make([]byte, 1)
 	ct := encryptor(oneByte)
 	baseSize := len(ct)
 
+	// TODO: get rid of the hard-coded upper-limit in this for-loops.
 	for i := 2; i < 1000; i++ {
 		pt := make([]byte, i)
 		ct = encryptor(pt)
