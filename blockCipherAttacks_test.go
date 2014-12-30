@@ -104,20 +104,6 @@ func TestUserEncode(t *testing.T) {
 	}
 }
 
-func TestGetMetacharacterFreeCipherText(t *testing.T) {
-	testString := "iam16ch"
-	key, _ := hex.DecodeString(fixedKeyString)
-
-	ct := GetMetacharacterFreeCipherText(testString)
-	pt, _ := EcbDecrypt(key, ct)
-
-	expectedCt, _ := EcbEncrypt(key, pt)
-	expectedPt, _ := EcbDecrypt(key, expectedCt)
-	if bytes.Compare(pt, expectedPt) != 0 {
-		t.Errorf("got %v", pt)
-	}
-}
-
 func TestCreateAdminProfileCipherText(t *testing.T) {
 	ct := CreateAdminProfileCipherText()
 	user, parseError := DecryptAndParseProfile(ct)

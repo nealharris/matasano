@@ -309,18 +309,6 @@ func createEncryptedProfile(email string) []byte {
 	return GenericEncryptionOracle([]byte(encodedProfile))
 }
 
-// Uses createEncryptedProfile as an oracle for generating ciphertext.
-// Plaintext can't contain '=' or '&', since those get stripped by the encoder.
-func GetMetacharacterFreeCipherText(pt string) []byte {
-	prePadding := "foobarbazz" // len("email=foobarbazz") == 16
-	paddedPt := string(PKCS7Pad([]byte(pt), 16))
-
-	encryptedProfile := createEncryptedProfile(prePadding + paddedPt)
-	// How many blocks of ciphertext do we need?
-	numBlocks := (len(paddedPt)) / 16
-	return encryptedProfile[16 : 16+16*(numBlocks)]
-}
-
 func CreateAdminProfileCipherText() []byte {
 	email1 := "neal@neal.admin"
 	profile1 := createEncryptedProfile(email1)
