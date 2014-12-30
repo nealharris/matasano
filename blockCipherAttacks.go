@@ -18,8 +18,9 @@ type oracle func(pt []byte) (ct []byte)
 // end with 5-10 random bytes (on each side), and encrypts under AES.  The mode
 // is randomly chosen between ECB and CBC.  If CBC mode is used, a random IV is
 // used.
-func EncryptionOracleCoinToss(pt []byte) []byte {
+func EncryptionOracleCoinToss(pt []byte) ([]byte, error) {
 	var ct []byte
+	var encryptError error
 	key := make([]byte, 16)
 	cryptorand.Read(key)
 
@@ -27,15 +28,19 @@ func EncryptionOracleCoinToss(pt []byte) []byte {
 
 	blockCipherMode := mathrand.Intn(2)
 	if blockCipherMode == ECB {
-		ct, _ = EcbEncrypt(key, pt)
+		ct, encryptError = EcbEncrypt(key, pt)
 	} else {
 		// Do CBC
 		iv := make([]byte, 16)
 		cryptorand.Read(iv)
-		ct, _ = CbcEncrypt(key, pt, iv)
+		ct, encryptError = CbcEncrypt(key, pt, iv)
 	}
 
-	return ct
+	if encryptError != nil {
+		return nil, encryptError
+	}
+
+	return ct, nil
 }
 
 func PadWithRandomBytes(buffer []byte, min, max int) []byte {
