@@ -286,6 +286,9 @@ func GenericEncryptionOracle(pt []byte) []byte {
 	return ct
 }
 
+// DecryptAndParseProfile takes ciphertext representing an encrypted user
+// profile, decrypts it, parses the plaintext, and returns the corresponding
+// User object.
 func DecryptAndParseProfile(ct []byte) User {
 	key, _ := hex.DecodeString(fixedKeyString)
 	pt, _ := EcbDecrypt(key, ct)
