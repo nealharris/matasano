@@ -30,7 +30,6 @@ func EncryptionOracleCoinToss(pt []byte) ([]byte, error) {
 	if blockCipherMode == ECB {
 		ct, encryptError = EcbEncrypt(key, pt)
 	} else {
-		// Do CBC
 		iv := make([]byte, 16)
 		cryptorand.Read(iv)
 		ct, encryptError = CbcEncrypt(key, pt, iv)
