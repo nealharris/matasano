@@ -112,7 +112,7 @@ func EcbDecrypt(key, ct []byte) ([]byte, error) {
 	return pt, nil
 }
 
-// EcbEncrypt takes byte arrays for key and ciphertext, encrypts the plaintext
+// EcbEncrypt takes byte arrays for key and plaintext, encrypts the plaintext
 // with the key using AES in ecb mode, and returns the resulting ciphertext.
 // The key-length must be either 16, 24, or 32 bytes in length; otherwise an
 // error will be returned.
@@ -200,7 +200,17 @@ func PKCS7Pad(b []byte, size int) []byte {
 	return result
 }
 
-func CbcEncrypt(key, pt, iv []byte) []byte {
+// CbcEncrypt takes byte arrays for key, plaintext, and initialization vector,
+// encrypts the plaintext with the key using AES in cbc mode, and returns the
+// resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
+// length; otherwise an error will be returned.  Note that the iv is not
+// returned as part of the ciphertext.
+func CbcEncrypt(key, pt, iv []byte) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(key)
+	if keyError != nil {
+		return nil, keyError
+	}
+
 	numBlocks := len(pt) / 16
 	if len(pt)%16 != 0 {
 		numBlocks++
@@ -210,7 +220,6 @@ func CbcEncrypt(key, pt, iv []byte) []byte {
 	copy(paddedPt, pt)
 
 	nextXor := iv
-	cipher, _ := aes.NewCipher(key)
 
 	var xored []byte
 	for i := 0; i < numBlocks; i++ {
@@ -219,17 +228,25 @@ func CbcEncrypt(key, pt, iv []byte) []byte {
 		nextXor = ct[16*i : 16*(i+1)]
 	}
 
-	return ct
+	return ct, nil
 }
 
-func CbcDecrypt(key, ct, iv []byte) []byte {
+// CbcDecrypt takes byte arrays for key, ciphertext, and initialization vector,
+// decrypts the plaintext with the key using AES in cbc mode, and returns the
+// resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
+// length; otherwise an error will be returned.  Note that the iv is taken as
+// a separate argument from the ciphertext.
+func CbcDecrypt(key, ct, iv []byte) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(key)
+	if keyError != nil {
+		return nil, keyError
+	}
+
 	numBlocks := len(ct) / 16
 	if len(ct)%16 != 0 {
 		numBlocks++
 	}
 	pt := make([]byte, numBlocks*16)
-
-	cipher, _ := aes.NewCipher(key)
 
 	preXor := make([]byte, 16)
 
@@ -244,7 +261,7 @@ func CbcDecrypt(key, ct, iv []byte) []byte {
 		}
 	}
 
-	return pt
+	return pt, nil
 }
 
 // Block cipher mode flags.

@@ -30,7 +30,7 @@ func EncryptionOracleCoinToss(pt []byte) []byte {
 		// Do CBC
 		iv := make([]byte, 16)
 		cryptorand.Read(iv)
-		ct = CbcEncrypt(key, pt, iv)
+		ct, _ = CbcEncrypt(key, pt, iv)
 	}
 
 	return ct
@@ -311,12 +311,14 @@ func CbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 	iv := make([]byte, 16)
 	cryptorand.Read(iv)
 
-	return CbcEncrypt(key, padded, iv), iv
+	ct, _ := CbcEncrypt(key, padded, iv)
+
+	return ct, iv
 }
 
 func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
 	keyBytes, _ := hex.DecodeString(cbcBitFlipKey)
-	pt := CbcDecrypt(keyBytes, ct, iv)
+	pt, _ := CbcDecrypt(keyBytes, ct, iv)
 	stripped, err := StripPKCS7Padding(pt)
 
 	if err != nil {
