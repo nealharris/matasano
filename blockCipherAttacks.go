@@ -68,6 +68,13 @@ func OracleEncryptionModeDetector(encryptor oracle) int {
 	return EncryptionModeDetector(ct)
 }
 
+// EncryptionModeDetector takes a byte array of ciphertext as input, attempts to
+// guess the block cipher mode used (ECB or CBC), and returns the appropriate
+// mode flag.
+//
+// The implementation is simple: it looks for a repeated block of ciphertext. If
+// it sees one, it assumes the ciphertext was encrypted under ECB.  Otherwise,
+// it assumes CBC was used.
 func EncryptionModeDetector(ct []byte) int {
 	if HasRepeatedBlock(ct, 16) {
 		return ECB
