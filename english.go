@@ -20,7 +20,10 @@ func RuneFrequencies(b []byte) map[rune]float64 {
 	return freqs
 }
 
-// lower score means more likely to be English
+// EnglishScore takes a byte array as input, and returns a score.  A lower score
+// indicates that the byte array is more likely to be english text.  The score
+// is computed by comparing the frequency of runes in the byte array to those
+// observed in English.
 func EnglishScore(b []byte) float64 {
 	// copied from http://en.wikipedia.org/wiki/Letter_frequency on 3/11/2014
 	expectedFreqs := map[rune]float64{
