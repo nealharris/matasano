@@ -86,6 +86,25 @@ func TestHammingDistance(t *testing.T) {
 	}
 }
 
+func TestHasRepeatedBlock(t *testing.T) {
+	bytes := []byte{1, 2, 3, 4, 1, 2, 5, 6}
+	if HasRepeatedBlock(bytes, 2) != true {
+		t.Errorf("Should have found repeated block of size 2 in %v", bytes)
+	}
+
+	if HasRepeatedBlock(bytes, 4) != false {
+		t.Errorf("Should not have found repeated block of size 4 in %v", bytes)
+	}
+}
+
+func TestPKCS7Pad(t *testing.T) {
+	unpadded := []byte{1, 1}
+	padded := PKCS7Pad(unpadded, 4)
+	if bytes.Compare(padded, []byte{1, 1, 2, 2}) != 0 {
+		t.Errorf("Incorrect padding.  Got: %v", padded)
+	}
+}
+
 func TestEcbEncrypt(t *testing.T) {
 	e64 := base64.StdEncoding
 
@@ -158,25 +177,6 @@ func TestEcbDecrypt(t *testing.T) {
 
 	if bytes.Compare(decodedPt, resultPt) != 0 {
 		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(resultPt))
-	}
-}
-
-func TestHasRepeatedBlock(t *testing.T) {
-	bytes := []byte{1, 2, 3, 4, 1, 2, 5, 6}
-	if HasRepeatedBlock(bytes, 2) != true {
-		t.Errorf("Should have found repeated block of size 2 in %v", bytes)
-	}
-
-	if HasRepeatedBlock(bytes, 4) != false {
-		t.Errorf("Should not have found repeated block of size 4 in %v", bytes)
-	}
-}
-
-func TestPKCS7Pad(t *testing.T) {
-	unpadded := []byte{1, 1}
-	padded := PKCS7Pad(unpadded, 4)
-	if bytes.Compare(padded, []byte{1, 1, 2, 2}) != 0 {
-		t.Errorf("Incorrect padding.  Got: %v", padded)
 	}
 }
 
