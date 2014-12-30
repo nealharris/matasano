@@ -210,6 +210,11 @@ func NextByte(encryptor oracle, prefixLength int, known []byte) byte {
 	return dict[ctTargetBlock]
 }
 
+// DecryptTarget takes an encryption oracle, prefix byte array, and length of
+// the target plaintext, and returns a byte array of the target plaintext. This
+// implements the attack described at http://cryptopals.com/sets/2/challenges/12
+// and http://cryptopals.com/sets/2/challenges/14.  An underlying assumption is
+// that the encryption oracle uses a block cipher in ECB mode.
 func DecryptTarget(encryptor oracle, prefix []byte, targetLength int) []byte {
 	known := make([]byte, 0, targetLength)
 
