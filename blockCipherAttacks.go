@@ -14,8 +14,10 @@ import (
 
 type oracle func(pt []byte) (ct []byte)
 
-// The following method will use a randomly generated key to encrypt
-// the input plaintext under either CBC or ECB mode (determined by a coin toss).
+// EncryptionOracleCoinToss takes a byte array as input, pads the begginning and
+// end with 5-10 random bytes (on each side), and encrypts under AES.  The mode
+// is randomly chosen between ECB and CBC.  If CBC mode is used, a random IV is
+// used.
 func EncryptionOracleCoinToss(pt []byte) []byte {
 	var ct []byte
 	key := make([]byte, 16)
