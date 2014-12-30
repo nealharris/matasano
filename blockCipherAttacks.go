@@ -120,7 +120,6 @@ func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
 	oneByte := make([]byte, 1)
 	ct := encryptor(oneByte)
 	baseSize := len(ct)
-	blockSize := -1
 
 	for i := 2; i < 1000; i++ {
 		pt := make([]byte, i)
@@ -138,8 +137,8 @@ func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
 		}
 	}
 
-	// should error if blockSize is negative
-	return blockSize
+	// TODO: make this an error
+	return -1
 }
 
 func PaddedBuffer(l int) bytes.Buffer {
