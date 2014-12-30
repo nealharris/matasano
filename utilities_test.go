@@ -86,6 +86,44 @@ func TestHammingDistance(t *testing.T) {
 	}
 }
 
+func TestEcbEncrypt(t *testing.T) {
+	e64 := base64.StdEncoding
+
+	encodedPtBytes, ptReadErr := ioutil.ReadFile("ecbPlaintext.txt")
+	if ptReadErr != nil {
+		t.Errorf("error reading pt file: %v", ptReadErr)
+	}
+
+	maxPtLen := e64.DecodedLen(len(encodedPtBytes))
+	decodedPt := make([]byte, maxPtLen)
+	numPtBytes, ptDecodeErr := e64.Decode(decodedPt, encodedPtBytes)
+	if ptDecodeErr != nil {
+		t.Errorf("error decoding plaintext: %v", ptDecodeErr)
+	}
+
+	key := []byte("YELLOW SUBMARINE")
+	resultCt, encryptError := EcbEncrypt(key, decodedPt[0:numPtBytes])
+	if encryptError != nil {
+		t.Errorf("Error encrypting: %v", encryptError)
+	}
+
+	expectedCtEncoded, ctReadErr := ioutil.ReadFile("ecbCiphertext.txt")
+	if ctReadErr != nil {
+		t.Errorf("error reading ct file: %v", ctReadErr)
+	}
+
+	maxCtLen := e64.DecodedLen(len(expectedCtEncoded))
+	decodedCt := make([]byte, maxCtLen)
+	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, expectedCtEncoded)
+	if ctDecodeErr != nil {
+		t.Errorf("error decoding ciphertext: %v", ctDecodeErr)
+	}
+
+	if bytes.Compare(decodedCt[0:numCtBytes], resultCt) != 0 {
+		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedCt), e64.EncodeToString(resultCt))
+	}
+}
+
 func TestEcbDecrypt(t *testing.T) {
 	e64 := base64.StdEncoding
 
