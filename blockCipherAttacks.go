@@ -1,12 +1,14 @@
 package matasano
 
 import (
+	"bufio"
 	"bytes"
 	cryptorand "crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	mathrand "math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -388,4 +390,50 @@ func ForgeAdminCiphertext() ([]byte, []byte) {
 	}
 
 	return tamperedCt, iv
+}
+
+const paddingOracleKeyString = "393521e9dad8b145c200559fb6b4a960"
+
+func getLinesFromFile(filePath string) ([]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return lines, nil
+}
+
+// PaddingOracleEncryptRandomPlaintext chooses a piece of plaintext at random
+// from paddingOraclePlaintexts.txt, b64 decodes it, encrypts it under
+// paddingOracleKey with a random IV, and returns the IV and resulting
+// ciphertext.
+func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
+	plaintexts, err := getLinesFromFile("paddingOraclePlaintexts.txt")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mathrand.Seed(time.Now().Unix()) // okay that this isn't a CSPRNG
+	ptBase64 := plaintexts[mathrand.Intn(len(plaintexts))]
+	unpaddedPt, _ := base64.StdEncoding.DecodeString(ptBase64)
+	paddedPt := PKCS7Pad(unpaddedPt, 16*(len(unpaddedPt)/16+1))
+
+	iv := make([]byte, 16)
+	cryptorand.Read(iv)
+
+	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
+	ct, encryptError := CbcEncrypt(keyBytes, paddedPt, iv)
+	if encryptError != nil {
+		return nil, nil, encryptError
+	}
+
+	return iv, ct, nil
 }
