@@ -90,6 +90,8 @@ const targetB64PlainText = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRv" +
 	"eW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
 const prefixB64PlainText = "qUIxzVDdZPWIIcmTwuZ4Y15qrzwK"
 
+// ByteAtATimeECBEncryptor is an implementation of the oracle described at
+// http://cryptopals.com/sets/2/challenges/12/
 func ByteAtATimeECBEncryptor(pt []byte) []byte {
 	key, _ := hex.DecodeString(fixedKeyString)
 	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
