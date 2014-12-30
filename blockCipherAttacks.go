@@ -78,9 +78,9 @@ func OracleEncryptionModeDetector(encryptor oracle) int {
 func EncryptionModeDetector(ct []byte) int {
 	if HasRepeatedBlock(ct, 16) {
 		return ECB
-	} else {
-		return CBC
 	}
+
+	return CBC
 }
 
 const fixedKeyString = "b80b215a9d87206e3fb1d40baf255a81"
