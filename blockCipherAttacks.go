@@ -365,18 +365,6 @@ func cbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 	return ct, iv
 }
 
-func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
-	keyBytes, _ := hex.DecodeString(cbcBitFlipKey)
-	pt, _ := CbcDecrypt(keyBytes, ct, iv)
-	stripped, err := StripPKCS7Padding(pt)
-
-	if err != nil {
-		return false, err
-	}
-
-	return strings.Contains(string(stripped), ";admin=true;"), nil
-}
-
 func ForgeAdminCiphertext() ([]byte, []byte) {
 	inputString := "hackdxadminxtrue"
 	targetString := "hackd;admin=true"

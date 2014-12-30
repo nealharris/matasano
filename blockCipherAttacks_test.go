@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -154,4 +155,16 @@ func TestForgeAdminCiphertext(t *testing.T) {
 	if !isAdmin {
 		t.Errorf("failed to get admin=true.  Here's the ct: %v", ct)
 	}
+}
+
+func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
+	keyBytes, _ := hex.DecodeString(cbcBitFlipKey)
+	pt, _ := CbcDecrypt(keyBytes, ct, iv)
+	stripped, err := StripPKCS7Padding(pt)
+
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(string(stripped), ";admin=true;"), nil
 }
