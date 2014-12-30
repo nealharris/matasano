@@ -333,15 +333,11 @@ func CreateAdminProfileCipherText() []byte {
 // and returns the result.  If the input does not have valid PKCS7 padding, an
 // error is returned.
 func StripPKCS7Padding(input []byte) ([]byte, error) {
-	lastByte := input[len(input)-1]
-	var i byte
-	for i = 0; i < lastByte; i++ {
-		if input[len(input)-1-int(i)] != lastByte {
-			return nil, errors.New("Invalid PKCS7 padding!")
-		}
+	if validPKCS7Padding(input) {
+		return input[0 : len(input)-int(input[len(input)-1])], nil
 	}
 
-	return input[0 : len(input)-int(lastByte)], nil
+	return nil, errors.New("Invalid PKCS7 padding!")
 }
 
 const cbcBitFlipKey = "d93a79a26b07260aadd624813e9f113d"
@@ -436,4 +432,29 @@ func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
 	}
 
 	return iv, ct, nil
+}
+
+// CipherTextHasValidPadding takes byte arrays for an iv and ciphertext,
+// decrypts the ciphertext under cbc mode with paddingOracleKeyString, and
+// returns whether or not the underlying plaintext has valid PKCS7 padding.
+// In the event of a decryption error, false is returned, along with the error.
+func CipherTextHasValidPadding(iv, ct []byte) (bool, error) {
+	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
+	pt, decryptError := CbcDecrypt(keyBytes, ct, iv)
+	if decryptError != nil {
+		return false, decryptError
+	}
+
+	return validPKCS7Padding(pt), nil
+}
+
+func validPKCS7Padding(input []byte) bool {
+	lastByte := input[len(input)-1]
+	for i := 0; byte(i) < lastByte; i++ {
+		if input[len(input)-1-int(i)] != lastByte {
+			return false
+		}
+	}
+
+	return true
 }

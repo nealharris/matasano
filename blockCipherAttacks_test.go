@@ -168,3 +168,19 @@ func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
 
 	return strings.Contains(string(stripped), ";admin=true;"), nil
 }
+
+func TestPaddingOracleEncryptRandomPlaintextPadding(t *testing.T) {
+	iv, ct, err := PaddingOracleEncryptRandomPlaintext()
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	validPadding, decryptError := CipherTextHasValidPadding(iv, ct)
+	if decryptError != nil {
+		t.Errorf("Unexpected error during decryption: %v", decryptError)
+	}
+
+	if !validPadding {
+		t.Errorf("Plaintext has invalid padding! IV and ciphertext: %v, %v", iv, ct)
+	}
+}
