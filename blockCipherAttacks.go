@@ -278,6 +278,8 @@ func profileFor(email string) string {
 	return u.Encode()
 }
 
+// GenericEncryptionOracle is an oracle that uses encrypts plaintext under ECB
+// using the key GenericEncryptionOracle.
 func GenericEncryptionOracle(pt []byte) []byte {
 	key, _ := hex.DecodeString(fixedKeyString)
 	ct, _ := EcbEncrypt(key, pt)
