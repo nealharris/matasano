@@ -304,18 +304,18 @@ func DecryptAndParseProfile(ct []byte) (User, error) {
 	return userFromParams(paramString), nil
 }
 
-func CreateEncryptedProfile(email string) []byte {
+func createEncryptedProfile(email string) []byte {
 	encodedProfile := profileFor(email)
 	return GenericEncryptionOracle([]byte(encodedProfile))
 }
 
-// Uses CreateEncryptedProfile as an oracle for generating ciphertext.
+// Uses createEncryptedProfile as an oracle for generating ciphertext.
 // Plaintext can't contain '=' or '&', since those get stripped by the encoder.
 func GetMetacharacterFreeCipherText(pt string) []byte {
 	prePadding := "foobarbazz" // len("email=foobarbazz") == 16
 	paddedPt := string(PKCS7Pad([]byte(pt), 16))
 
-	encryptedProfile := CreateEncryptedProfile(prePadding + paddedPt)
+	encryptedProfile := createEncryptedProfile(prePadding + paddedPt)
 	// How many blocks of ciphertext do we need?
 	numBlocks := (len(paddedPt)) / 16
 	return encryptedProfile[16 : 16+16*(numBlocks)]
@@ -323,12 +323,12 @@ func GetMetacharacterFreeCipherText(pt string) []byte {
 
 func CreateAdminProfileCipherText() []byte {
 	email1 := "neal@neal.admin"
-	profile1 := CreateEncryptedProfile(email1)
+	profile1 := createEncryptedProfile(email1)
 	adminBlock := profile1[16:32] // decrypts to "admin&uid=10&rol"
 	endBlock := profile1[0:16]    // decrypts to "email=neal@neal."
 
 	email2 := "neal@neal.com"
-	profile2 := CreateEncryptedProfile(email2)
+	profile2 := createEncryptedProfile(email2)
 	firstBlock := profile2[0:32] // decrypts to "email=neal@neal.com&uid=10&role="
 
 	return append(firstBlock, append(adminBlock, endBlock...)...)
