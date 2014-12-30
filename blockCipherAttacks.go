@@ -112,6 +112,10 @@ func ByteAtATimeECBEncryptorTricky(pt []byte) []byte {
 	return ct
 }
 
+// DiscoverBlockSizeOfEncryptionOracle retunrs the block-size of the encryption
+// oracle passed as input.  It does this by passing increasingly longer
+// plaintexts to the oracle, and observes when the length of the resulting
+// ciphertext increases.
 func DiscoverBlockSizeOfEncryptionOracle(encryptor oracle) int {
 	oneByte := make([]byte, 1)
 	ct := encryptor(oneByte)
