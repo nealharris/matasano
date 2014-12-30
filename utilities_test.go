@@ -105,6 +105,7 @@ func TestPKCS7Pad(t *testing.T) {
 	}
 }
 
+// TODO: DRY up ecb/cbc tests.  LOTS of repeated code.
 func TestEcbEncrypt(t *testing.T) {
 	e64 := base64.StdEncoding
 
