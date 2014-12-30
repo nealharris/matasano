@@ -100,6 +100,8 @@ func ByteAtATimeECBEncryptor(pt []byte) []byte {
 	return ct
 }
 
+// ByteAtATimeECBEncryptorTricky is an implementation of the oracle described at
+// http://cryptopals.com/sets/2/challenges/14
 func ByteAtATimeECBEncryptorTricky(pt []byte) []byte {
 	key, _ := hex.DecodeString(fixedKeyString)
 	targetBytes, _ := base64.StdEncoding.DecodeString(targetB64PlainText)
