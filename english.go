@@ -70,6 +70,9 @@ func EnglishScore(b []byte) float64 {
 	return score
 }
 
+// FindSingleCharForXor takes a byte array as input, and returns the byte that
+// was most likely used as the key for single-key-xor encryption (assuming the
+// plaintext is English text.)
 func FindSingleCharForXor(b []byte) byte {
 	bestScore := float64(-1)
 	var bestChar byte
