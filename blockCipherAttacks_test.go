@@ -159,7 +159,7 @@ func TestForgeAdminCiphertext(t *testing.T) {
 
 func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
 	keyBytes, _ := hex.DecodeString(cbcBitFlipKey)
-	pt, _ := CbcDecrypt(keyBytes, ct, iv)
+	pt, _ := CbcDecrypt(keyBytes, iv, ct)
 	stripped, err := StripPKCS7Padding(pt)
 
 	if err != nil {

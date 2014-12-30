@@ -34,7 +34,7 @@ func EncryptionOracleCoinToss(pt []byte) ([]byte, error) {
 	} else {
 		iv := make([]byte, 16)
 		cryptorand.Read(iv)
-		ct, encryptError = CbcEncrypt(key, pt, iv)
+		ct, encryptError = CbcEncrypt(key, iv, pt)
 	}
 
 	if encryptError != nil {
@@ -358,7 +358,7 @@ func cbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 	iv := make([]byte, 16)
 	cryptorand.Read(iv)
 
-	ct, _ := CbcEncrypt(key, padded, iv)
+	ct, _ := CbcEncrypt(key, iv, padded)
 
 	return ct, iv
 }
@@ -426,7 +426,7 @@ func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
 	cryptorand.Read(iv)
 
 	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
-	ct, encryptError := CbcEncrypt(keyBytes, paddedPt, iv)
+	ct, encryptError := CbcEncrypt(keyBytes, iv, paddedPt)
 	if encryptError != nil {
 		return nil, nil, encryptError
 	}
@@ -440,7 +440,7 @@ func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
 // In the event of a decryption error, false is returned, along with the error.
 func CipherTextHasValidPadding(iv, ct []byte) (bool, error) {
 	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
-	pt, decryptError := CbcDecrypt(keyBytes, ct, iv)
+	pt, decryptError := CbcDecrypt(keyBytes, iv, ct)
 	if decryptError != nil {
 		return false, decryptError
 	}

@@ -200,12 +200,12 @@ func PKCS7Pad(b []byte, size int) []byte {
 	return result
 }
 
-// CbcEncrypt takes byte arrays for key, plaintext, and initialization vector,
+// CbcEncrypt takes byte arrays for key, iv, plaintext,
 // encrypts the plaintext with the key using AES in cbc mode, and returns the
 // resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
 // length; otherwise an error will be returned.  Note that the iv is not
 // returned as part of the ciphertext.
-func CbcEncrypt(key, pt, iv []byte) ([]byte, error) {
+func CbcEncrypt(key, iv, pt []byte) ([]byte, error) {
 	cipher, keyError := aes.NewCipher(key)
 	if keyError != nil {
 		return nil, keyError
@@ -231,12 +231,12 @@ func CbcEncrypt(key, pt, iv []byte) ([]byte, error) {
 	return ct, nil
 }
 
-// CbcDecrypt takes byte arrays for key, ciphertext, and initialization vector,
+// CbcDecrypt takes byte arrays for key, iv, and ciphertext,
 // decrypts the plaintext with the key using AES in cbc mode, and returns the
 // resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
 // length; otherwise an error will be returned.  Note that the iv is taken as
 // a separate argument from the ciphertext.
-func CbcDecrypt(key, ct, iv []byte) ([]byte, error) {
+func CbcDecrypt(key, iv, ct []byte) ([]byte, error) {
 	cipher, keyError := aes.NewCipher(key)
 	if keyError != nil {
 		return nil, keyError
