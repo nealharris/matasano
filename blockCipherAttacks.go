@@ -309,6 +309,10 @@ func createEncryptedProfile(email string) []byte {
 	return GenericEncryptionOracle([]byte(encodedProfile))
 }
 
+// CreateAdminProfileCipherText performs the ecb cut-and-paste attack described
+// at http://cryptopals.com/sets/2/challenges/13/ to generate ciphertext that
+// will decrypt to a User profile with the admin role, without any knowledge of
+//the key being used to generate the ciphertext.
 func CreateAdminProfileCipherText() []byte {
 	email1 := "neal@neal.admin"
 	profile1 := createEncryptedProfile(email1)
