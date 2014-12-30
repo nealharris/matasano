@@ -42,6 +42,9 @@ func EncryptionOracleCoinToss(pt []byte) ([]byte, error) {
 	return ct, nil
 }
 
+// PadWithRandomBytes takes a byte array, and min/max ints.  It then prepends
+// and appends the input with a random number (in [min, max]) of random bytes.
+// The number of bytes prepended and appended are chosen separately.
 func PadWithRandomBytes(buffer []byte, min, max int) []byte {
 	mathrand.Seed(time.Now().Unix())
 	numPrependBytes := mathrand.Intn(max-min) + min
