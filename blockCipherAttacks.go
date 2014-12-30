@@ -186,6 +186,10 @@ func getDictionaryForNextByte(encryptor oracle, prefixLength int, known []byte) 
 	return dict
 }
 
+// NextByte takes an encryption oracle, length of prefix prepended to attacker
+// controlled plaintext, and byte array of known plaintext, and returns the
+// next byte of the plaintext under attack.  It is assumed that the oracle uses
+// a block cipher in ECB mode.
 func NextByte(encryptor oracle, prefixLength int, known []byte) byte {
 	dict := getDictionaryForNextByte(encryptor, prefixLength, known)
 
