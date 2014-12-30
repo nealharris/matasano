@@ -59,8 +59,8 @@ func PadWithRandomBytes(buffer []byte, min, max int) []byte {
 	return append(append(prependBytes, buffer...), appendBytes...)
 }
 
-// Attempts to guess the mode for the EncryptionOracle
-// Returns a boolean describing whether or not it succeeded
+// OracleEncryptionModeDetector returns the cipher block mode used by the oracle
+// passed as an argument.  The only guessed modes are ECB and CBC.
 func OracleEncryptionModeDetector(encryptor oracle) int {
 	pt := make([]byte, 64)
 	ct := encryptor(pt)
