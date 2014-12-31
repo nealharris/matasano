@@ -175,7 +175,7 @@ func TestPaddingOracleEncryptRandomPlaintextPadding(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	validPadding, decryptError := CipherTextHasValidPadding(iv, ct)
+	validPadding, decryptError := CiphertextHasValidPadding(iv, ct)
 	if decryptError != nil {
 		t.Errorf("Unexpected error during decryption: %v", decryptError)
 	}

@@ -434,11 +434,11 @@ func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
 	return iv, ct, nil
 }
 
-// CipherTextHasValidPadding takes byte arrays for an iv and ciphertext,
+// CiphertextHasValidPadding takes byte arrays for an iv and ciphertext,
 // decrypts the ciphertext under cbc mode with paddingOracleKeyString, and
 // returns whether or not the underlying plaintext has valid PKCS7 padding.
 // In the event of a decryption error, false is returned, along with the error.
-func CipherTextHasValidPadding(iv, ct []byte) (bool, error) {
+func CiphertextHasValidPadding(iv, ct []byte) (bool, error) {
 	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
 	pt, decryptError := CbcDecrypt(keyBytes, iv, ct)
 	if decryptError != nil {
@@ -486,7 +486,7 @@ func paddingOracleAttackSingleBlock(iv, block []byte) ([]byte, error) {
 
 		for tamper := 0; tamper < 256; tamper++ {
 			tamperIv[targetIndex] = byte(tamper)
-			validPadding, decryptError := CipherTextHasValidPadding(tamperIv, block)
+			validPadding, decryptError := CiphertextHasValidPadding(tamperIv, block)
 
 			if decryptError != nil {
 				return nil, decryptError
