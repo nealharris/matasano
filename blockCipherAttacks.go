@@ -449,7 +449,14 @@ func CipherTextHasValidPadding(iv, ct []byte) (bool, error) {
 }
 
 func validPKCS7Padding(input []byte) bool {
+	if len(input) == 0 {
+		return false
+	}
+
 	lastByte := input[len(input)-1]
+	if lastByte == 0 {
+		return false
+	}
 	for i := 0; byte(i) < lastByte; i++ {
 		if input[len(input)-1-int(i)] != lastByte {
 			return false
