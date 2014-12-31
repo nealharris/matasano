@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -264,8 +265,58 @@ func CbcDecrypt(key, iv, ct []byte) ([]byte, error) {
 	return pt, nil
 }
 
+// CtrEncrypt implements AES-CTR mode.  It takes the key and plaintext as byte
+// arrays, the nonce as a uint, and returns a byte array for the resulting
+// plaintext.
+func CtrEncrypt(key, pt []byte, nonce uint64) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(key)
+	if keyError != nil {
+		return nil, keyError
+	}
+
+	numPtBlocks := len(pt) / 16
+	if len(pt)%16 != 0 {
+		numPtBlocks++
+	}
+
+	littleEndianNonce := make([]byte, 8)
+	binary.LittleEndian.PutUint64(littleEndianNonce, nonce)
+
+	littleEndianCounter := make([]byte, 8)
+	counter := uint64(0)
+
+	preKeyStream := make([]byte, 16)
+	keyStream := make([]byte, numPtBlocks*16)
+	keyStreamBlock := make([]byte, 16)
+
+	for i := 0; i < numPtBlocks; i++ {
+		binary.LittleEndian.PutUint64(littleEndianCounter, counter)
+		preKeyStream = append(littleEndianNonce, littleEndianCounter...)
+		cipher.Encrypt(keyStreamBlock, preKeyStream)
+
+		for j := 0; j < 16; j++ {
+			keyStream[i*16+j] = keyStreamBlock[j]
+		}
+
+		counter++
+	}
+
+	ct, xorError := Xor(pt, keyStream[0:len(pt)])
+	if xorError != nil {
+		return nil, xorError
+	}
+
+	return ct, nil
+}
+
+// CtrDecrypt is just an alias for CtrEncrypt.
+func CtrDecrypt(key, pt []byte, nonce uint64) ([]byte, error) {
+	return CtrEncrypt(key, pt, nonce)
+}
+
 // Block cipher mode flags.
 const (
 	ECB = iota
 	CBC
+	CTR
 )

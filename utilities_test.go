@@ -262,3 +262,29 @@ func TestCbcDecrypt(t *testing.T) {
 		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(resultPt))
 	}
 }
+
+func TestCtrEncrypt(t *testing.T) {
+	e64 := base64.StdEncoding
+	b64Ciphertext := "L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=="
+	b64ExpectedPlaintext := "WW8sIFZJUCBMZXQncyBraWNrIGl0IEljZSwgSWNlLCBiYWJ5IEljZSwgSWNlLCBiYWJ5IA=="
+	keyBytes := []byte("YELLOW SUBMARINE")
+
+	ct, ctDecodeErr := e64.DecodeString(b64Ciphertext)
+	if ctDecodeErr != nil {
+		t.Errorf("error decoding ciphertext: %v", ctDecodeErr)
+	}
+
+	expectedPt, expectedPtDecoderr := e64.DecodeString(b64ExpectedPlaintext)
+	if expectedPtDecoderr != nil {
+		t.Errorf("error decoding expected plaintext: %v", expectedPtDecoderr)
+	}
+
+	pt, decryptError := CtrEncrypt(keyBytes, ct, 0)
+	if decryptError != nil {
+		t.Errorf("error decrypting ciphertext: %v", decryptError)
+	}
+
+	if bytes.Compare(expectedPt, pt) != 0 {
+		t.Errorf("expected %v, but got %v", expectedPt, pt)
+	}
+}
