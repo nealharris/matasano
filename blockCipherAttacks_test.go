@@ -184,3 +184,25 @@ func TestPaddingOracleEncryptRandomPlaintextPadding(t *testing.T) {
 		t.Errorf("Plaintext has invalid padding! IV and ciphertext: %v, %v", iv, ct)
 	}
 }
+
+func TestPaddingOracleAttack(t *testing.T) {
+	iv, ct, err := PaddingOracleEncryptRandomPlaintext()
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	pt, paddingOracleError := PaddingOracleAttack(iv, ct)
+	if paddingOracleError != nil {
+		t.Errorf("error while performing padding oracle attack: %v", paddingOracleError)
+	}
+
+	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
+	expectedPt, decryptErr := CbcDecrypt(keyBytes, iv, ct)
+	if decryptErr != nil {
+		t.Errorf("error decrypting: %v", decryptErr)
+	}
+
+	if bytes.Compare(expectedPt, pt) != 0 {
+		t.Errorf("expected %v, but got %v", expectedPt, pt)
+	}
+}

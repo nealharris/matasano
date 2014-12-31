@@ -465,3 +465,65 @@ func validPKCS7Padding(input []byte) bool {
 
 	return true
 }
+
+func paddingOracleAttackSingleBlock(iv, block []byte) ([]byte, error) {
+	if len(block) != 16 {
+		return nil, errors.New("input block must be 16 bytes long")
+	}
+	if len(iv) != 16 {
+		return nil, errors.New("iv must be 16 bytes long")
+	}
+
+	tamperIv := make([]byte, 16)
+	pt := make([]byte, 16)
+
+	for targetIndex := 15; targetIndex >= 0; targetIndex-- {
+		paddingByte := byte(16 - targetIndex)
+
+		for i := targetIndex + 1; i < 16; i++ {
+			tamperIv[i] = iv[i] ^ pt[i] ^ paddingByte
+		}
+
+		for tamper := 0; tamper < 256; tamper++ {
+			tamperIv[targetIndex] = byte(tamper)
+			validPadding, decryptError := CipherTextHasValidPadding(tamperIv, block)
+
+			if decryptError != nil {
+				return nil, decryptError
+			}
+
+			if validPadding {
+				pt[targetIndex] = iv[targetIndex] ^ paddingByte ^ byte(tamper)
+				break
+			} else if tamper == 255 {
+				return nil, errors.New("unable to produce valid padding")
+			}
+		}
+	}
+
+	return pt, nil
+}
+
+// PaddingOracleAttack performs the attack described at
+// http://cryptopals.com/sets/3/challenges/17/.  It takes the target iv and
+// ciphertext as input, and returns the underlying plaintext.
+func PaddingOracleAttack(iv, ct []byte) ([]byte, error) {
+	blocks := SplitIntoBlocks(ct, 16)
+	ptBlocks := make([][]byte, len(blocks))
+	var err error
+	var ptBlock []byte
+	for index, element := range blocks {
+		if index == 0 {
+			ptBlock, err = paddingOracleAttackSingleBlock(iv, element)
+		} else {
+			ptBlock, err = paddingOracleAttackSingleBlock(blocks[index-1], element)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		ptBlocks[index] = ptBlock
+	}
+
+	return bytes.Join(ptBlocks, nil), nil
+}
