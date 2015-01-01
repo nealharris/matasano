@@ -263,7 +263,7 @@ func TestCbcDecrypt(t *testing.T) {
 	}
 }
 
-func TestCtrEncrypt(t *testing.T) {
+func TestCtrDecrypt(t *testing.T) {
 	e64 := base64.StdEncoding
 	b64Ciphertext := "L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=="
 	b64ExpectedPlaintext := "WW8sIFZJUCBMZXQncyBraWNrIGl0IEljZSwgSWNlLCBiYWJ5IEljZSwgSWNlLCBiYWJ5IA=="
@@ -279,7 +279,7 @@ func TestCtrEncrypt(t *testing.T) {
 		t.Errorf("error decoding expected plaintext: %v", expectedPtDecoderr)
 	}
 
-	pt, decryptError := CtrEncrypt(keyBytes, ct, 0)
+	pt, decryptError := CtrDecrypt(keyBytes, ct, 0)
 	if decryptError != nil {
 		t.Errorf("error decrypting ciphertext: %v", decryptError)
 	}
