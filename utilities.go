@@ -74,6 +74,79 @@ func RepeatingKeyXor(key, plaintext []byte) []byte {
 	return result
 }
 
+// BreakRepeatingKeyXor takes a []byte array of ciphertext as input.  Assuming
+// that ciphertext was encrypted with 'repeating-key xor', this performs the
+// attack described at http://cryptopals.com/sets/1/challenges/6/,
+// and returns the plaintext.
+func BreakRepeatingKeyXor(ciphertext []byte) ([]byte, error) {
+	keyLength, err := repeatingKeyXorKeyLength(ciphertext, 2, 40)
+	if err != nil {
+		return nil, err
+	}
+
+	transposed := transpose(ciphertext, keyLength)
+
+	key := make([]byte, len(transposed))
+	for index, element := range transposed {
+		key[index] = FindSingleCharForXor(element)
+	}
+
+	return RepeatingKeyXor(key, ciphertext), nil
+}
+
+func repeatingKeyXorKeyLength(ciphertext []byte, minKeyLength, maxKeyLength int) (int, error) {
+	bestWeight := -1.0
+	bestKeyLength := 0
+
+	for kl := minKeyLength; kl <= maxKeyLength; kl++ {
+		currWeight := 0.0
+
+		for i := 0; i < 4; i++ {
+			for j := i + 1; j < 4; j++ {
+				dist, err := normalizedHammingDistance(ciphertext[i*kl:(i+1)*kl],
+					ciphertext[j*kl:(j+1)*kl])
+				if err != nil {
+					return -1, err
+				}
+
+				currWeight += dist
+			}
+		}
+
+		if currWeight < bestWeight || bestWeight < 0 {
+			bestWeight = currWeight
+			bestKeyLength = kl
+		}
+	}
+
+	return bestKeyLength, nil
+}
+
+func normalizedHammingDistance(b1, b2 []byte) (float64, error) {
+	dist, err := HammingDistance(b1, b2)
+	return float64(dist) / float64(len(b1)), err
+}
+
+func transpose(input []byte, length int) [][]byte {
+	numBlocks := len(input) / length
+	if numBlocks%length != 0 {
+		numBlocks++
+	}
+
+	transposed := make([][]byte, length)
+	for i := range transposed {
+		transposed[i] = make([]byte, numBlocks)
+	}
+
+	for i := 0; i < len(input); i++ {
+		colIndex := i % length
+		rowIndex := i / length
+		transposed[colIndex][rowIndex] = input[i]
+	}
+
+	return transposed
+}
+
 // HammingDistance takes two byte arrays as input, and returns their Hamming
 // Distance (https://en.wikipedia.org/wiki/Hamming_distance).  Returns an error
 // if the byte arrays are not the same length.

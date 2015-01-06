@@ -3,6 +3,7 @@ package matasano
 import (
 	"bytes"
 	"io/ioutil"
+	"reflect"
 	"testing"
 )
 import (
@@ -286,5 +287,52 @@ func TestCtrDecrypt(t *testing.T) {
 
 	if bytes.Compare(expectedPt, pt) != 0 {
 		t.Errorf("expected %v, but got %v", expectedPt, pt)
+	}
+}
+
+func TestBreakRepeatingKeyXor(t *testing.T) {
+	e64 := base64.StdEncoding
+
+	encodedCtBytes, ctReadErr := ioutil.ReadFile("repeatingKeyXorTest.txt")
+	if ctReadErr != nil {
+		t.Errorf("error reading ct file: %v", ctReadErr)
+	}
+
+	maxCtLen := e64.DecodedLen(len(encodedCtBytes))
+	decodedCt := make([]byte, maxCtLen)
+	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, encodedCtBytes)
+	if ctDecodeErr != nil {
+		t.Errorf("failed to decode ct: %v", ctDecodeErr)
+	}
+
+	pt, err := BreakRepeatingKeyXor(decodedCt[0:numCtBytes])
+	if err != nil {
+		t.Errorf("error while trying to recover pt: %v", err)
+	}
+
+	expectedPt, expectedPtReadErr := ioutil.ReadFile("repeatingKeyXorTestPt.txt")
+	if expectedPtReadErr != nil {
+		t.Errorf("error reading expected pt file: %v", expectedPtReadErr)
+	}
+
+	maxExpectedPtLen := e64.DecodedLen(len(expectedPt))
+	decodedPt := make([]byte, maxExpectedPtLen)
+	numExpectedPtBytes, expectedPtDecodeErr := e64.Decode(decodedPt, expectedPt)
+	if expectedPtDecodeErr != nil {
+		t.Errorf("failed to decode expected pt: %v", expectedPtDecodeErr)
+	}
+
+	if bytes.Compare(decodedPt[0:numExpectedPtBytes], pt) != 0 {
+		t.Errorf("expected to recover %v, but got %v", decodedPt[0:numExpectedPtBytes], pt)
+	}
+}
+
+func TestTranspose(t *testing.T) {
+	b := []byte{1, 2, 3, 4}
+	transposed := transpose(b, 2)
+	expected := [][]byte{{1, 3}, {2, 4}}
+
+	if !reflect.DeepEqual(transposed, expected) {
+		t.Errorf("expected %v, but got %v", expected, transposed)
 	}
 }
