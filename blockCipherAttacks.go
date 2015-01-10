@@ -541,3 +541,47 @@ func PaddingOracleAttack(iv, ct []byte) ([]byte, error) {
 
 	return bytes.Join(ptBlocks, nil), nil
 }
+
+// FixedNonceCtrAttack performs the attack described at
+// http://cryptopals.com/sets/3/challenges/20/
+func FixedNonceCtrAttack() ([]byte, error) {
+	e64 := base64.StdEncoding
+
+	ciphertextStrings, readErr := getLinesFromFile("fixedNoncePlaintexts.txt")
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	decodedCiphertexts := make([][]byte, len(ciphertextStrings))
+	var decodeErr error
+	for index, element := range ciphertextStrings {
+		decodedCiphertexts[index], decodeErr = e64.DecodeString(element)
+		if decodeErr != nil {
+			return nil, decodeErr
+		}
+	}
+
+	truncatedCiphertexts := truncateToShortest(decodedCiphertexts)
+	ct := bytes.Join(truncatedCiphertexts, nil)
+
+	return BreakRepeatingKeyXor(ct)
+}
+
+func truncateToShortest(input [][]byte) [][]byte {
+	// First, we find the length of the shortest byte array in the input.
+	minLength := len(input[0])
+	for _, element := range input {
+		if len(element) < minLength {
+			minLength = len(element)
+		}
+	}
+
+	// Now, we return input, but with everything truncated to the length of the
+	// smallest element in the input.
+	result := make([][]byte, len(input))
+	for index, element := range input {
+		result[index] = element[0:minLength]
+	}
+
+	return result
+}
