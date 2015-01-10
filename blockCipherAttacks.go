@@ -407,6 +407,20 @@ func getLinesFromFile(filePath string) ([]string, error) {
 	return lines, nil
 }
 
+func getLinesFromFileAsBytes(filePath string) ([][]byte, error) {
+	lines, err := getLinesFromFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	linesAsBytes := make([][]byte, len(lines))
+	for index, element := range lines {
+		linesAsBytes[index] = []byte(element)
+	}
+
+	return linesAsBytes, nil
+}
+
 // PaddingOracleEncryptRandomPlaintext chooses a piece of plaintext at random
 // from paddingOraclePlaintexts.txt, b64 decodes it, encrypts it under
 // paddingOracleKey with a random IV, and returns the IV and resulting
