@@ -21,7 +21,9 @@ func (mt *MersenneTwister) Initialize(seed uint32) {
 func (mt *MersenneTwister) generateNumbers() {
 	for index, element := range mt.state {
 		y := (element & 0x80000000) + (mt.state[(index+1)%len(mt.state)] & 0x7fffffff)
+
 		mt.state[index] = mt.state[(index+397)%len(mt.state)] ^ (y >> 1)
+
 		if y%2 != 0 {
 			mt.state[index] = mt.state[index] ^ 2567483615
 		}
