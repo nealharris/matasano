@@ -15,7 +15,6 @@ func (mt *MersenneTwister) Initialize(seed uint32) {
 
 	for i := uint32(1); i < uint32(len(mt.state)); i++ {
 		mt.state[i] = uint32(1812433253*(mt.state[i-1]^(mt.state[i-1]>>30)) + i)
-		//MT[i] := lowest 32 bits of(1812433253 * (MT[i-1] xor (right shift by 30 bits(MT[i-1]))   ) + i) // 0x6c078965
 	}
 }
 
