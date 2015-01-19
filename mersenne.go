@@ -1,5 +1,7 @@
 package matasano
 
+import "errors"
+
 // MersenneTwister is a PRNG.  It produces an integer in the range
 // range [0, 2^32 - 1]
 type MersenneTwister struct {
@@ -45,5 +47,20 @@ func (mt *MersenneTwister) ExtractNumber() uint32 {
 
 	mt.index = ((mt.index + 1) % 624)
 
-	return uint32(y)
+	return y
+}
+
+// CrackMersenneSeed takes the first output of the MT19937 PRNG, a min and max
+// value for the seed, and returns a seed in that range that produces that
+// output.  If no such seed is found, an error is returned.
+func CrackMersenneSeed(prngOutput uint32, min, max uint32) (uint32, error) {
+	for i := min; i <= max; i++ {
+		mt := new(MersenneTwister)
+		mt.Initialize(i)
+		if mt.ExtractNumber() == prngOutput {
+			return i, nil
+		}
+	}
+
+	return 0, errors.New("no seed in the given range produces the given output")
 }

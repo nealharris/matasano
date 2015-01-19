@@ -1,6 +1,10 @@
 package matasano
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+	"time"
+)
 
 func TestMersenne(t *testing.T) {
 	mt := new(MersenneTwister)
@@ -13,5 +17,27 @@ func TestMersenne(t *testing.T) {
 		if val != element {
 			t.Errorf("expected %v, but got %v at index %v", element, val, index)
 		}
+	}
+}
+
+func TestSeedCrack(t *testing.T) {
+	rangeSize := 100000
+	rand.Seed(time.Now().Unix())
+	min := uint32(rand.Int31())
+	max := min + uint32(rangeSize)
+	offset := uint32(rand.Intn(rangeSize))
+	seed := min + offset
+
+	mt := new(MersenneTwister)
+	mt.Initialize(seed)
+	output := mt.ExtractNumber()
+
+	guess, err := CrackMersenneSeed(output, min, max)
+	if err != nil {
+		t.Errorf("error while trying to crack seed: %v", err)
+	}
+
+	if guess != seed {
+		t.Errorf("guessed seed was %v, but it's actually %v", guess, seed)
 	}
 }
