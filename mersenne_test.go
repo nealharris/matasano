@@ -41,3 +41,44 @@ func TestSeedCrack(t *testing.T) {
 		t.Errorf("guessed seed was %v, but it's actually %v", guess, seed)
 	}
 }
+
+func TestUndoRightMix(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+	x := uint32(rand.Int31())
+
+	// rightMix is not-invertible if the second arg is 0
+	for i := 1; i < 32; i++ {
+		rightMixed := rightMix(x, uint(i))
+		undone := undoRightMix(rightMixed, uint(i))
+		if undone != x {
+			t.Errorf("Expected %v, but got %v, at index %v", x, undone, i)
+		}
+	}
+}
+
+func TestUndoLeftMix(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+	x := uint32(rand.Int31())
+	magic := uint32(rand.Int31())
+
+	// leftMix is not-invertible if the second arg is 0
+	for i := 1; i < 32; i++ {
+		leftMixed := leftMix(x, magic, uint(i))
+		undone := undoLeftMix(leftMixed, magic, uint(i))
+		if undone != x {
+			t.Errorf("Expected %v, but got %v, at index %v", x, undone, i)
+		}
+	}
+}
+
+func TestUntemper(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+	x := uint32(rand.Int31())
+
+	tempered := temper(x)
+	untempered := untemper(tempered)
+
+	if x != untempered {
+		t.Errorf("expected %v, but got %v", x, untempered)
+	}
+}

@@ -39,15 +39,83 @@ func (mt *MersenneTwister) ExtractNumber() uint32 {
 		mt.generateNumbers()
 	}
 
-	y := mt.state[mt.index]
-	y = y ^ (y >> 11)
-	y = y ^ ((y << 7) & 2636928640)
-	y = y ^ ((y << 15) & 4022730752)
-	y = y ^ (y >> 18)
-
+	output := temper(mt.state[mt.index])
 	mt.index = ((mt.index + 1) % 624)
+	return output
+}
 
-	return y
+func temper(input uint32) uint32 {
+	output := rightMix(input, 11)
+	output = leftMix(output, 2636928640, 7)
+	output = leftMix(output, 4022730752, 15)
+	output = rightMix(output, 18)
+
+	return output
+}
+
+func untemper(input uint32) uint32 {
+	output := undoRightMix(input, 18)
+	output = undoLeftMix(output, 4022730752, 15)
+	output = undoLeftMix(output, 2636928640, 7)
+	output = undoRightMix(output, 11)
+
+	return output
+}
+
+func rightMix(input uint32, shift uint) uint32 {
+	return input ^ (input >> shift)
+}
+
+func undoRightMix(input uint32, shift uint) uint32 {
+	output := input
+
+	for i := 31 - int(shift); i >= 0; i-- {
+		if hasBit(output, uint(i)) != hasBit(output, uint(i)+shift) {
+			output = setBit(output, uint(i))
+		} else {
+			output = clearBit(output, uint(i))
+		}
+	}
+
+	return output
+}
+
+func leftMix(input, magic uint32, shift uint) uint32 {
+	return input ^ ((input << shift) & magic)
+}
+
+func undoLeftMix(input, magic uint32, shift uint) uint32 {
+	output := input
+
+	for i := shift; i < 32; i++ {
+		lowerBit := hasBit(output, uint(i)-shift)
+		magicBit := hasBit(magic, i)
+		xored := lowerBit && magicBit
+
+		if hasBit(output, uint(i)) != xored {
+			output = setBit(output, uint(i))
+		} else {
+			output = clearBit(output, uint(i))
+		}
+	}
+
+	return output
+}
+
+func setBit(n uint32, pos uint) uint32 {
+	n |= (1 << pos)
+	return n
+}
+
+func clearBit(n uint32, pos uint) uint32 {
+	mask := ^(1 << pos)
+	n &= uint32(mask)
+	return n
+}
+
+func hasBit(n uint32, pos uint) bool {
+	val := n & (1 << pos)
+	return (val > 0)
 }
 
 // CrackMersenneSeed takes the first output of the MT19937 PRNG, a min and max
