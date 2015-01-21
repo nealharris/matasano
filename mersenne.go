@@ -1,6 +1,9 @@
 package matasano
 
-import "errors"
+import (
+	"encoding/binary"
+	"errors"
+)
 
 // MersenneTwister is a PRNG.  It produces an integer in the range
 // range [0, 2^32 - 1]
@@ -156,4 +159,26 @@ func CloneMersenneTwister(mtOutput [624]uint32) *MersenneTwister {
 	mt.setIndex(0)
 
 	return mt
+}
+
+// MersenneStreamCipherEncrypt creates a stream cipher as described at
+// http://cryptopals.com/sets/3/challenges/24/
+func MersenneStreamCipherEncrypt(seed int, pt []byte) []byte {
+	mt := new(MersenneTwister)
+	mt.Initialize(uint32(seed))
+
+	var key []byte
+
+	if len(pt)%4 == 0 {
+		key = make([]byte, len(pt))
+	} else {
+		key = make([]byte, 4*(len(pt)/4)+4)
+	}
+
+	for i := 0; i < len(key)/4; i++ {
+		binary.LittleEndian.PutUint32(key[i*4:(i+1)*4], mt.ExtractNumber())
+	}
+
+	ct, _ := Xor(key[0:len(pt)], pt)
+	return ct
 }

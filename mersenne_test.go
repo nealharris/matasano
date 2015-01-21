@@ -1,6 +1,7 @@
 package matasano
 
 import (
+	"bytes"
 	"math/rand"
 	"testing"
 	"time"
@@ -101,5 +102,19 @@ func TestCloneMersenneTwister(t *testing.T) {
 		if cloned.ExtractNumber() != mt.ExtractNumber() {
 			t.Errorf("oh noes!")
 		}
+	}
+}
+
+func TestMersenneStreamCipherEncrypt(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+	seed := rand.Int()
+	len := rand.Intn(1000)
+	pt := make([]byte, len)
+	for i := 0; i < len; i++ {
+		pt[i] = byte(rand.Intn(256))
+	}
+
+	if bytes.Compare(pt, MersenneStreamCipherEncrypt(seed, MersenneStreamCipherEncrypt(seed, pt))) != 0 {
+		t.Errorf("Expected MersenneStreamCipherEncrypt to also decrypt")
 	}
 }
