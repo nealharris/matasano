@@ -82,3 +82,24 @@ func TestUntemper(t *testing.T) {
 		t.Errorf("expected %v, but got %v", x, untempered)
 	}
 }
+
+func TestCloneMersenneTwister(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+	seed := uint32(rand.Int31())
+
+	mt := new(MersenneTwister)
+	mt.Initialize(seed)
+
+	var outputs [624]uint32
+	for i := 0; i < 624; i++ {
+		outputs[i] = mt.ExtractNumber()
+	}
+
+	cloned := CloneMersenneTwister(outputs)
+
+	for i := 0; i < 624; i++ {
+		if cloned.ExtractNumber() != mt.ExtractNumber() {
+			t.Errorf("oh noes!")
+		}
+	}
+}

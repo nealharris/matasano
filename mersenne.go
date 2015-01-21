@@ -32,6 +32,14 @@ func (mt *MersenneTwister) generateNumbers() {
 	}
 }
 
+func (mt *MersenneTwister) setState(state [624]uint32) {
+	mt.state = state
+}
+
+func (mt *MersenneTwister) setIndex(index int) {
+	mt.index = index
+}
+
 // ExtractNumber produces a tempered pseudorandom number based on the index-th
 // value calling generate_numbers() every 624 numbers
 func (mt *MersenneTwister) ExtractNumber() uint32 {
@@ -131,4 +139,21 @@ func CrackMersenneSeed(prngOutput uint32, min, max uint32) (uint32, error) {
 	}
 
 	return 0, errors.New("no seed in the given range produces the given output")
+}
+
+// CloneMersenneTwister performs the attack described at
+// http://cryptopals.com/sets/3/challenges/23/.  It takes the first 624 outputs
+// of a MT19937 PRNG, and produces a clone of that MT19937 instance that
+// produced that output.
+func CloneMersenneTwister(mtOutput [624]uint32) *MersenneTwister {
+	var state [624]uint32
+	for i := 0; i < 624; i++ {
+		state[i] = untemper(mtOutput[i])
+	}
+
+	mt := new(MersenneTwister)
+	mt.setState(state)
+	mt.setIndex(0)
+
+	return mt
 }
