@@ -108,9 +108,10 @@ func TestCloneMersenneTwister(t *testing.T) {
 func TestMersenneStreamCipherEncrypt(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	seed := rand.Int()
-	len := rand.Intn(1000)
-	pt := make([]byte, len)
-	for i := 0; i < len; i++ {
+	length := rand.Intn(1000)
+	pt := make([]byte, length)
+
+	for i := 0; i < length; i++ {
 		pt[i] = byte(rand.Intn(256))
 	}
 
