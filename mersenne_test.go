@@ -118,3 +118,28 @@ func TestMersenneStreamCipherEncrypt(t *testing.T) {
 		t.Errorf("Expected MersenneStreamCipherEncrypt to also decrypt")
 	}
 }
+
+func TestRecoverSeedFromCipherText(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+	seed := rand.Intn(1 << 16)
+	length := rand.Intn(1000)
+
+	pt := make([]byte, length+len(knownPt))
+	for i := 0; i < length; i++ {
+		pt[i] = byte(rand.Intn(256))
+	}
+	for i := 0; i < len(knownPt); i++ {
+		pt[length+i] = knownPt[i]
+	}
+
+	ct := MersenneStreamCipherEncrypt(seed, pt)
+	guessedSeed, err := RecoverSeedFromCipherText(ct)
+
+	if err != nil {
+		t.Errorf("error recovering seed: %v", err)
+	}
+
+	if seed != guessedSeed {
+		t.Errorf("was supposed to get %v, but got %v", seed, guessedSeed)
+	}
+}

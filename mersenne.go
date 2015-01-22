@@ -1,6 +1,7 @@
 package matasano
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 )
@@ -181,4 +182,26 @@ func MersenneStreamCipherEncrypt(seed int, pt []byte) []byte {
 
 	ct, _ := Xor(key[0:len(pt)], pt)
 	return ct
+}
+
+const knownPt = "AAAAAAAAAAAAAA"
+
+// RecoverSeedFromCipherText assumes that the ciphertext passed in was generated
+// with MersenneStreamCipherEncrypt, using a 16-bit seed, and that the
+// underlying plaintext ends with a known value.  It then brute-forces the seed
+// space to determine which value was used to seed MT19937.  If no such seed is
+// found, an error is returned.
+func RecoverSeedFromCipherText(ct []byte) (int, error) {
+	knownPt := []byte(knownPt)
+
+	// iterate over all possible seeds, decrypt ct until we get pt that ends
+	// with the known pt
+	for i := 0; i < (1 << 16); i++ {
+		pt := MersenneStreamCipherEncrypt(i, ct)
+		if bytes.Compare(pt[len(ct)-len(knownPt):], []byte(knownPt)) == 0 {
+			return i, nil
+		}
+	}
+
+	return -1, errors.New("could not find seed")
 }
