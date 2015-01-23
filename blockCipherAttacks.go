@@ -585,3 +585,30 @@ func truncateToShortest(input [][]byte) [][]byte {
 
 	return result
 }
+
+// AttackRandomWriteReEncrypt performs the attack described at
+// http://cryptopals.com/sets/4/challenges/25/
+func (enc *CtrEncryptor) AttackRandomWriteReEncrypt(ct []byte) ([]byte, error) {
+	numBlocks := len(ct) / 16
+	if len(ct)%16 != 0 {
+		numBlocks++
+	}
+
+	key := make([]byte, 16*numBlocks)
+
+	// Recover the Key by rewriting with 0
+	for i := 0; i < numBlocks; i++ {
+		zeros := make([]byte, 16)
+
+		keyBlock, err := enc.edit(ct, i*16, zeros)
+		if err != nil {
+			return nil, err
+		}
+
+		for j := 0; j < 16; j++ {
+			key[i*16+j] = keyBlock[i*16+j] // BUG HERE: keyBlock is actually edited ct!!!!
+		}
+	}
+
+	return Xor(key[0:len(ct)], ct)
+}

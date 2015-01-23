@@ -341,37 +341,23 @@ func CbcDecrypt(key, iv, ct []byte) ([]byte, error) {
 // CtrEncrypt implements AES-CTR mode.  It takes the key and plaintext as byte
 // arrays, the nonce as a uint, and returns a byte array for the resulting
 // plaintext.
-func CtrEncrypt(key, pt []byte, nonce uint64) ([]byte, error) {
-	cipher, keyError := aes.NewCipher(key)
-	if keyError != nil {
-		return nil, keyError
-	}
-
+func (enc *CtrEncryptor) CtrEncrypt(pt []byte) ([]byte, error) {
 	numPtBlocks := len(pt) / 16
 	if len(pt)%16 != 0 {
 		numPtBlocks++
 	}
 
-	littleEndianNonce := make([]byte, 8)
-	binary.LittleEndian.PutUint64(littleEndianNonce, nonce)
-
-	littleEndianCounter := make([]byte, 8)
-	counter := uint64(0)
-
-	preKeyStream := make([]byte, 16)
 	keyStream := make([]byte, numPtBlocks*16)
-	keyStreamBlock := make([]byte, 16)
 
 	for i := 0; i < numPtBlocks; i++ {
-		binary.LittleEndian.PutUint64(littleEndianCounter, counter)
-		preKeyStream = append(littleEndianNonce, littleEndianCounter...)
-		cipher.Encrypt(keyStreamBlock, preKeyStream)
+		keyStreamBlock, ctrErr := enc.ctrKeystreamForBlock(uint64(i))
+		if ctrErr != nil {
+			return nil, ctrErr
+		}
 
 		for j := 0; j < 16; j++ {
 			keyStream[i*16+j] = keyStreamBlock[j]
 		}
-
-		counter++
 	}
 
 	ct, xorError := Xor(pt, keyStream[0:len(pt)])
@@ -382,9 +368,30 @@ func CtrEncrypt(key, pt []byte, nonce uint64) ([]byte, error) {
 	return ct, nil
 }
 
+func (enc *CtrEncryptor) ctrKeystreamForBlock(blockIndex uint64) ([]byte, error) {
+	littleEndianNonce := make([]byte, 8)
+	binary.LittleEndian.PutUint64(littleEndianNonce, enc.nonce)
+
+	littleEndianCounter := make([]byte, 8)
+	binary.LittleEndian.PutUint64(littleEndianCounter, blockIndex)
+
+	preKeyStream := make([]byte, 16)
+	preKeyStream = append(littleEndianNonce, littleEndianCounter...)
+
+	cipher, keyError := aes.NewCipher(enc.key)
+	if keyError != nil {
+		return nil, keyError
+	}
+
+	keyStreamBlock := make([]byte, 16)
+	cipher.Encrypt(keyStreamBlock, preKeyStream)
+
+	return keyStreamBlock, nil
+}
+
 // CtrDecrypt is just an alias for CtrEncrypt.
-func CtrDecrypt(key, pt []byte, nonce uint64) ([]byte, error) {
-	return CtrEncrypt(key, pt, nonce)
+func (enc *CtrEncryptor) CtrDecrypt(pt []byte) ([]byte, error) {
+	return enc.CtrEncrypt(pt)
 }
 
 // Block cipher mode flags.
@@ -393,3 +400,29 @@ const (
 	CBC
 	CTR
 )
+
+// CtrEncryptor provides AES encryption in Ctr mode.
+type CtrEncryptor struct {
+	key   []byte
+	nonce uint64
+}
+
+func (enc *CtrEncryptor) edit(ct []byte, offset int, newPlaintext []byte) ([]byte, error) {
+	keyStream, ctrErr := enc.ctrKeystreamForBlock(uint64(offset / 16))
+	if ctrErr != nil {
+		return nil, ctrErr
+	}
+
+	ctBlock, xorErr := Xor(keyStream, newPlaintext)
+	if xorErr != nil {
+		return nil, xorErr
+	}
+
+	modifedCt := make([]byte, len(ct))
+	copy(modifedCt, ct)
+	for i := 0; i < 16; i++ {
+		modifedCt[offset+i] = ctBlock[i]
+	}
+
+	return modifedCt, nil
+}

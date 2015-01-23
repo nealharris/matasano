@@ -3,8 +3,10 @@ package matasano
 import (
 	"bufio"
 	"bytes"
+	cryptorand "crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -204,5 +206,40 @@ func TestPaddingOracleAttack(t *testing.T) {
 
 	if bytes.Compare(expectedPt, pt) != 0 {
 		t.Errorf("expected %v, but got %v", expectedPt, pt)
+	}
+}
+
+func TestAttackRandomWriteReEncrypt(t *testing.T) {
+	e64 := base64.StdEncoding
+
+	encodedPtBytes, ptReadErr := ioutil.ReadFile("ecbPlaintext.txt")
+	if ptReadErr != nil {
+		t.Errorf("error reading pt file: %v", ptReadErr)
+	}
+
+	maxPtLen := e64.DecodedLen(len(encodedPtBytes))
+	decodedPt := make([]byte, maxPtLen)
+	numPtBytes, ptDecodeErr := e64.Decode(decodedPt, encodedPtBytes)
+	if ptDecodeErr != nil {
+		t.Errorf("error decoding plaintext: %v", ptDecodeErr)
+	}
+
+	key := make([]byte, 16)
+	cryptorand.Read(key)
+
+	enc := CtrEncryptor{key, 0}
+
+	ct, encErr := enc.CtrEncrypt(decodedPt[0:numPtBytes])
+	if encErr != nil {
+		t.Errorf("error encrypting: %v", encErr)
+	}
+
+	guessedPt, attackErr := enc.AttackRandomWriteReEncrypt(ct)
+	if attackErr != nil {
+		t.Errorf("error performing ctr random re-encrypt: %v", attackErr)
+	}
+
+	if bytes.Compare(guessedPt, decodedPt[0:numPtBytes]) != 0 {
+		t.Errorf("guessed %v, but expected %v", guessedPt, decodedPt[0:numPtBytes])
 	}
 }
