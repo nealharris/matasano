@@ -8,7 +8,28 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/ioutil"
 )
+
+// ReadB64File takes the path to a file of base64 encoded data, reads the file
+// at that path, base64 decodes the data, and returns the resulting []byte.
+func ReadB64File(filePath string) ([]byte, error) {
+	e64 := base64.StdEncoding
+
+	encoded, readErr := ioutil.ReadFile(filePath)
+	if readErr != nil {
+		return nil, readErr
+	}
+
+	maxDecodedLen := e64.DecodedLen(len(encoded))
+	decoded := make([]byte, maxDecodedLen)
+	numBytes, decodeErr := e64.Decode(decoded, encoded)
+	if decodeErr != nil {
+		return nil, decodeErr
+	}
+
+	return decoded[0:numBytes], nil
+}
 
 // HexToB64 takes a string, hex-decodes it, encodes the result in base64, and
 // returns the result.  Returns an error if unable to hex-decode the input.
