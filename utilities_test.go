@@ -2,7 +2,6 @@ package matasano
 
 import (
 	"bytes"
-	"io/ioutil"
 	"reflect"
 	"testing"
 )
@@ -108,159 +107,89 @@ func TestPKCS7Pad(t *testing.T) {
 
 // TODO: DRY up ecb/cbc tests.  LOTS of repeated code.
 func TestEcbEncrypt(t *testing.T) {
-	e64 := base64.StdEncoding
-
-	encodedPtBytes, ptReadErr := ioutil.ReadFile("ecbPlaintext.txt")
-	if ptReadErr != nil {
-		t.Errorf("error reading pt file: %v", ptReadErr)
-	}
-
-	maxPtLen := e64.DecodedLen(len(encodedPtBytes))
-	decodedPt := make([]byte, maxPtLen)
-	numPtBytes, ptDecodeErr := e64.Decode(decodedPt, encodedPtBytes)
+	pt, ptDecodeErr := ReadB64File("ecbPlaintext.txt")
 	if ptDecodeErr != nil {
 		t.Errorf("error decoding plaintext: %v", ptDecodeErr)
 	}
 
 	key := []byte("YELLOW SUBMARINE")
-	resultCt, encryptError := EcbEncrypt(key, decodedPt[0:numPtBytes])
+	resultCt, encryptError := EcbEncrypt(key, pt)
 	if encryptError != nil {
 		t.Errorf("Error encrypting: %v", encryptError)
 	}
 
-	expectedCtEncoded, ctReadErr := ioutil.ReadFile("ecbCiphertext.txt")
-	if ctReadErr != nil {
-		t.Errorf("error reading ct file: %v", ctReadErr)
-	}
-
-	maxCtLen := e64.DecodedLen(len(expectedCtEncoded))
-	decodedCt := make([]byte, maxCtLen)
-	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, expectedCtEncoded)
+	expectedCt, ctDecodeErr := ReadB64File("ecbCiphertext.txt")
 	if ctDecodeErr != nil {
-		t.Errorf("error decoding ciphertext: %v", ctDecodeErr)
+		t.Errorf("error reading ct file: %v", ctDecodeErr)
 	}
 
-	if bytes.Compare(decodedCt[0:numCtBytes], resultCt) != 0 {
-		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedCt), e64.EncodeToString(resultCt))
+	if bytes.Compare(expectedCt, resultCt) != 0 {
+		t.Errorf("expected %v, but got %v", expectedCt, resultCt)
 	}
 }
 
 func TestEcbDecrypt(t *testing.T) {
-	e64 := base64.StdEncoding
-
-	ctBytes, ctReadErr := ioutil.ReadFile("ecbCiphertext.txt")
+	ctBytes, ctReadErr := ReadB64File("ecbCiphertext.txt")
 	if ctReadErr != nil {
 		t.Errorf("error reading ct file: %v", ctReadErr)
 	}
 
-	maxCtLen := e64.DecodedLen(len(ctBytes))
-	decodedCt := make([]byte, maxCtLen)
-	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, ctBytes)
-
-	if ctDecodeErr != nil {
-		t.Errorf("error decoding ciphertext: %v", ctDecodeErr)
-	}
-
 	key := []byte("YELLOW SUBMARINE")
-	resultPt, _ := EcbDecrypt(key, decodedCt[0:numCtBytes])
+	resultPt, _ := EcbDecrypt(key, ctBytes)
 
-	encodedExpectedPtBytes, ptReadErr := ioutil.ReadFile("ecbPlaintext.txt")
+	expectedPtBytes, ptReadErr := ReadB64File("ecbPlaintext.txt")
 	if ptReadErr != nil {
 		t.Errorf("error reading pt file: %v", ptReadErr)
 	}
 
-	maxPtLen := e64.DecodedLen(len(encodedExpectedPtBytes))
-	decodedPt := make([]byte, maxPtLen)
-	_, ptDecodeErr := e64.Decode(decodedPt, encodedExpectedPtBytes)
-
-	if ptDecodeErr != nil {
-		t.Errorf("error decoding expected plaintext: %v", ptDecodeErr)
-	}
-
-	if bytes.Compare(decodedPt, resultPt) != 0 {
-		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(resultPt))
+	if bytes.Compare(expectedPtBytes, resultPt) != 0 {
+		t.Errorf("expected %v, but got %v", expectedPtBytes, resultPt)
 	}
 }
 
 func TestCbcEncrypt(t *testing.T) {
-	e64 := base64.StdEncoding
-
-	ptBytes, ptReadErr := ioutil.ReadFile("cbcPlaintext.txt")
+	ptBytes, ptReadErr := ReadB64File("cbcPlaintext.txt")
 	if ptReadErr != nil {
 		t.Errorf("error reading plaintext file: %v", ptReadErr)
 	}
 
-	maxPtLen := e64.DecodedLen(len(ptBytes))
-	decodedPt := make([]byte, maxPtLen)
-	_, ptDecodeErr := e64.Decode(decodedPt, ptBytes)
-
-	if ptDecodeErr != nil {
-		t.Errorf("error decoding plaintext: %v", ptDecodeErr)
-	}
-
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)
-	resultCt, encryptError := CbcEncrypt(key, iv, decodedPt)
+	resultCt, encryptError := CbcEncrypt(key, iv, ptBytes)
 	if encryptError != nil {
 		t.Errorf("Error decrypting: %v", encryptError)
 	}
 
-	encodedExpectedCtBytes, ctReadErr := ioutil.ReadFile("cbcCiphertext.txt")
+	expectedCtBytes, ctReadErr := ReadB64File("cbcCiphertext.txt")
 	if ctReadErr != nil {
 		t.Errorf("error reading pt file: %v", ctReadErr)
 	}
 
-	maxCtLen := e64.DecodedLen(len(encodedExpectedCtBytes))
-	decodedCt := make([]byte, maxCtLen)
-	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, encodedExpectedCtBytes)
-
-	if ctDecodeErr != nil {
-		t.Errorf("error decoding expected plaintext: %v", ptDecodeErr)
-	}
-
-	if bytes.Compare(decodedCt[0:numCtBytes], resultCt) != 0 {
-		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedCt), e64.EncodeToString(resultCt))
+	if bytes.Compare(expectedCtBytes, resultCt) != 0 {
+		t.Errorf("expected %v, but got %v", expectedCtBytes, resultCt)
 	}
 }
 
 func TestCbcDecrypt(t *testing.T) {
-	e64 := base64.StdEncoding
-
-	ctBytes, ctReadErr := ioutil.ReadFile("cbcCiphertext.txt")
+	ctBytes, ctReadErr := ReadB64File("cbcCiphertext.txt")
 	if ctReadErr != nil {
 		t.Errorf("error reading ct file: %v", ctReadErr)
 	}
 
-	maxCtLen := e64.DecodedLen(len(ctBytes))
-	decodedCt := make([]byte, maxCtLen)
-	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, ctBytes)
-
-	if ctDecodeErr != nil {
-		t.Errorf("error decoding ciphertext: %v", ctDecodeErr)
-	}
-
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)
-	resultPt, decryptError := CbcDecrypt(key, iv, decodedCt[0:numCtBytes])
+	resultPt, decryptError := CbcDecrypt(key, iv, ctBytes)
 	if decryptError != nil {
 		t.Errorf("Error decrypting: %v", decryptError)
 	}
 
-	encodedExpectedPtBytes, ptReadErr := ioutil.ReadFile("cbcPlaintext.txt")
+	expectedPtBytes, ptReadErr := ReadB64File("cbcPlaintext.txt")
 	if ptReadErr != nil {
 		t.Errorf("error reading pt file: %v", ptReadErr)
 	}
 
-	maxPtLen := e64.DecodedLen(len(encodedExpectedPtBytes))
-	decodedPt := make([]byte, maxPtLen)
-	_, ptDecodeErr := e64.Decode(decodedPt, encodedExpectedPtBytes)
-
-	if ptDecodeErr != nil {
-		t.Errorf("error decoding expected plaintext: %v", ptDecodeErr)
-	}
-
-	if bytes.Compare(decodedPt, resultPt) != 0 {
-		t.Errorf("expected %v, but got %v", e64.EncodeToString(decodedPt), e64.EncodeToString(resultPt))
+	if bytes.Compare(expectedPtBytes, resultPt) != 0 {
+		t.Errorf("expected %v, but got %v", expectedPtBytes, resultPt)
 	}
 }
 
@@ -293,39 +222,23 @@ func TestCtrDecrypt(t *testing.T) {
 }
 
 func TestBreakRepeatingKeyXor(t *testing.T) {
-	e64 := base64.StdEncoding
-
-	encodedCtBytes, ctReadErr := ioutil.ReadFile("repeatingKeyXorTest.txt")
+	ctBytes, ctReadErr := ReadB64File("repeatingKeyXorTest.txt")
 	if ctReadErr != nil {
 		t.Errorf("error reading ct file: %v", ctReadErr)
 	}
 
-	maxCtLen := e64.DecodedLen(len(encodedCtBytes))
-	decodedCt := make([]byte, maxCtLen)
-	numCtBytes, ctDecodeErr := e64.Decode(decodedCt, encodedCtBytes)
-	if ctDecodeErr != nil {
-		t.Errorf("failed to decode ct: %v", ctDecodeErr)
-	}
-
-	pt, err := BreakRepeatingKeyXor(decodedCt[0:numCtBytes])
+	pt, err := BreakRepeatingKeyXor(ctBytes)
 	if err != nil {
 		t.Errorf("error while trying to recover pt: %v", err)
 	}
 
-	expectedPt, expectedPtReadErr := ioutil.ReadFile("repeatingKeyXorTestPt.txt")
+	expectedPt, expectedPtReadErr := ReadB64File("repeatingKeyXorTestPt.txt")
 	if expectedPtReadErr != nil {
 		t.Errorf("error reading expected pt file: %v", expectedPtReadErr)
 	}
 
-	maxExpectedPtLen := e64.DecodedLen(len(expectedPt))
-	decodedPt := make([]byte, maxExpectedPtLen)
-	numExpectedPtBytes, expectedPtDecodeErr := e64.Decode(decodedPt, expectedPt)
-	if expectedPtDecodeErr != nil {
-		t.Errorf("failed to decode expected pt: %v", expectedPtDecodeErr)
-	}
-
-	if bytes.Compare(decodedPt[0:numExpectedPtBytes], pt) != 0 {
-		t.Errorf("expected to recover %v, but got %v", decodedPt[0:numExpectedPtBytes], pt)
+	if bytes.Compare(expectedPt, pt) != 0 {
+		t.Errorf("expected to recover %v, but got %v", expectedPt, pt)
 	}
 }
 
