@@ -133,7 +133,7 @@ func TestPKCS7PaddingStripper(t *testing.T) {
 
 func TestcbcAdminBitFlipperRemovesAdminString(t *testing.T) {
 	adminString := ";admin=true;"
-	ct, iv := cbcBitFlipStringEncryptor(adminString)
+	ct, iv := cbcBitFlipStringEncrypt(adminString)
 	containsAdmin, err := CbcBitFlipIsAdmin(ct, iv)
 
 	if err != nil {
@@ -158,13 +158,47 @@ func TestForgeAdminCiphertext(t *testing.T) {
 	}
 }
 
+func TestForgeAdminCiphertextCtr(t *testing.T) {
+	ct, err := ForgeAdminCiphertextCtr()
+	if err != nil {
+		t.Errorf("got unexpected error: %v", err)
+	}
+
+	isAdmin, err := CtrBitFlipIsAdmin(ct)
+
+	if err != nil {
+		t.Errorf("got an unexpected error: %v", err)
+	}
+
+	if !isAdmin {
+		t.Errorf("failed to get admin=true.  Here's the ct: %v", ct)
+	}
+}
+
 func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
-	keyBytes, _ := hex.DecodeString(cbcBitFlipKey)
+	keyBytes, _ := hex.DecodeString(bitFlipKey)
 	pt, _ := CbcDecrypt(keyBytes, iv, ct)
 	stripped, err := StripPKCS7Padding(pt)
 
 	if err != nil {
 		return false, err
+	}
+
+	return strings.Contains(string(stripped), ";admin=true;"), nil
+}
+
+func CtrBitFlipIsAdmin(ct []byte) (bool, error) {
+	keyBytes, _ := hex.DecodeString(bitFlipKey)
+	ctrEnc := CtrEncryptor{keyBytes, 0}
+	pt, decryptErr := ctrEnc.CtrDecrypt(ct)
+	if decryptErr != nil {
+		return false, decryptErr
+	}
+
+	stripped, paddingErr := StripPKCS7Padding(pt)
+
+	if paddingErr != nil {
+		return false, paddingErr
 	}
 
 	return strings.Contains(string(stripped), ";admin=true;"), nil

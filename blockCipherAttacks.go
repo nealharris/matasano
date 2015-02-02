@@ -340,27 +340,45 @@ func StripPKCS7Padding(input []byte) ([]byte, error) {
 	return nil, errors.New("Invalid PKCS7 padding!")
 }
 
-const cbcBitFlipKey = "d93a79a26b07260aadd624813e9f113d"
+const bitFlipKey = "d93a79a26b07260aadd624813e9f113d"
 
-func cbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
+func cbcBitFlipStringEncrypt(pt string) ([]byte, []byte) {
+	prepped := prepStringForBitflipAttack(pt)
+
+	key, _ := hex.DecodeString(bitFlipKey)
+	iv := make([]byte, 16)
+	cryptorand.Read(iv)
+
+	ct, _ := CbcEncrypt(key, iv, prepped)
+
+	return ct, iv
+}
+
+func ctrBitFlipStringEncrypt(pt string) []byte {
+	prepped := prepStringForBitflipAttack(pt)
+
+	key, _ := hex.DecodeString(bitFlipKey)
+	ctrEnc := CtrEncryptor{key, 0}
+
+	ct, _ := ctrEnc.CtrEncrypt(prepped)
+
+	return ct
+}
+
+const bitFlipAttackPrefix = "comment1=cooking%20MCs;userdata="
+const bitFlipAttackSuffix = ";comment2=%20like%20a%20pound%20of%20bacon"
+const bitFlipAttackInput = "hackdxadminxtrue"
+const bitFlipAttackTarget = "hackd;admin=true"
+
+func prepStringForBitflipAttack(pt string) []byte {
 	// first, kill all ';' and '=' from the input
 	cleaned := strings.Replace(pt, ";", "", -1)
 	cleaned = strings.Replace(cleaned, "=", "", -1)
 
-	prefix := "comment1=cooking%20MCs;userdata="
-	suffix := ";comment2=%20like%20a%20pound%20of%20bacon"
-	bytes := []byte(prefix + cleaned + suffix)
+	bytes := []byte(bitFlipAttackPrefix + cleaned + bitFlipAttackSuffix)
 
 	lengthWithPadding := (len(bytes)/16 + 1) * 16
-	padded := PKCS7Pad(bytes, lengthWithPadding)
-
-	key, _ := hex.DecodeString(cbcBitFlipKey)
-	iv := make([]byte, 16)
-	cryptorand.Read(iv)
-
-	ct, _ := CbcEncrypt(key, iv, padded)
-
-	return ct, iv
+	return PKCS7Pad(bytes, lengthWithPadding)
 }
 
 // ForgeAdminCiphertext performs the cbc bit-flipping attack described at
@@ -368,16 +386,14 @@ func cbcBitFlipStringEncryptor(pt string) ([]byte, []byte) {
 // decrypt and parse to a User with the admin role, without any knowledge of the
 // key used to generate the ciphertext.  Returns the ciphertext and iv.
 func ForgeAdminCiphertext() ([]byte, []byte) {
-	inputString := "hackdxadminxtrue"
-	targetString := "hackd;admin=true"
-	ct, iv := cbcBitFlipStringEncryptor(inputString)
+	ct, iv := cbcBitFlipStringEncrypt(bitFlipAttackInput)
 
 	tamperedCt := make([]byte, len(ct))
 	copy(tamperedCt, ct)
 
 	// target is in third block of ct
 	// need to xor 2nd block of ct with hackdxadminxtrue XOR hackd;admin=true
-	tamperMask, _ := Xor([]byte(inputString), []byte(targetString))
+	tamperMask, _ := Xor([]byte(bitFlipAttackInput), []byte(bitFlipAttackTarget))
 	secondBlock := tamperedCt[16:32]
 	replacement, _ := Xor(tamperMask, secondBlock)
 
@@ -386,6 +402,28 @@ func ForgeAdminCiphertext() ([]byte, []byte) {
 	}
 
 	return tamperedCt, iv
+}
+
+// ForgeAdminCiphertextCtr performs the ctr bit-flipping attack described at
+// http://cryptopals.com/sets/4/challenges/26/
+func ForgeAdminCiphertextCtr() ([]byte, error) {
+	ct := ctrBitFlipStringEncrypt(bitFlipAttackInput)
+	prependZeros := make([]byte, len(bitFlipAttackPrefix))
+	appendZeros := make([]byte, len(ct)-len(bitFlipAttackInput)-len(prependZeros))
+
+	input := append(append(prependZeros, []byte(bitFlipAttackInput)...), appendZeros...)
+	target := append(append(prependZeros, []byte(bitFlipAttackTarget)...), appendZeros...)
+	ptXor, xorErr := Xor(input, target)
+	if xorErr != nil {
+		return nil, xorErr
+	}
+
+	res, xorErr := Xor(ct, ptXor)
+	if xorErr != nil {
+		return nil, xorErr
+	}
+
+	return res, nil
 }
 
 const paddingOracleKeyString = "393521e9dad8b145c200559fb6b4a960"
