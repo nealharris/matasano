@@ -644,7 +644,7 @@ func (enc *CtrEncryptor) AttackRandomWriteReEncrypt(ct []byte) ([]byte, error) {
 		}
 
 		for j := 0; j < 16; j++ {
-			key[i*16+j] = keyBlock[i*16+j] // BUG HERE: keyBlock is actually edited ct!!!!
+			key[i*16+j] = keyBlock[i*16+j]
 		}
 	}
 
