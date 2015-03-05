@@ -34,7 +34,8 @@ func EncryptionOracleCoinToss(pt []byte) ([]byte, error) {
 	} else {
 		iv := make([]byte, 16)
 		cryptorand.Read(iv)
-		ct, encryptError = CbcEncrypt(key, iv, pt)
+		cbcEnc := CbcEncryptor{key, iv}
+		ct, encryptError = cbcEnc.CbcEncrypt(pt)
 	}
 
 	if encryptError != nil {
@@ -348,8 +349,8 @@ func cbcBitFlipStringEncrypt(pt string) ([]byte, []byte) {
 	key, _ := hex.DecodeString(bitFlipKey)
 	iv := make([]byte, 16)
 	cryptorand.Read(iv)
-
-	ct, _ := CbcEncrypt(key, iv, prepped)
+	cbcEnc := CbcEncryptor{key, iv}
+	ct, _ := cbcEnc.CbcEncrypt(prepped)
 
 	return ct, iv
 }
@@ -474,11 +475,12 @@ func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
 	unpaddedPt, _ := base64.StdEncoding.DecodeString(ptBase64)
 	paddedPt := PKCS7Pad(unpaddedPt, 16*(len(unpaddedPt)/16+1))
 
+	key, _ := hex.DecodeString(paddingOracleKeyString)
 	iv := make([]byte, 16)
 	cryptorand.Read(iv)
+	cbcEnc := CbcEncryptor{key, iv}
 
-	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
-	ct, encryptError := CbcEncrypt(keyBytes, iv, paddedPt)
+	ct, encryptError := cbcEnc.CbcEncrypt(paddedPt)
 	if encryptError != nil {
 		return nil, nil, encryptError
 	}
@@ -491,8 +493,10 @@ func PaddingOracleEncryptRandomPlaintext() ([]byte, []byte, error) {
 // returns whether or not the underlying plaintext has valid PKCS7 padding.
 // In the event of a decryption error, false is returned, along with the error.
 func CiphertextHasValidPadding(iv, ct []byte) (bool, error) {
-	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
-	pt, decryptError := CbcDecrypt(keyBytes, iv, ct)
+	key, _ := hex.DecodeString(paddingOracleKeyString)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	pt, decryptError := cbcEnc.CbcDecrypt(ct)
 	if decryptError != nil {
 		return false, decryptError
 	}

@@ -155,7 +155,9 @@ func TestCbcEncrypt(t *testing.T) {
 
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)
-	resultCt, encryptError := CbcEncrypt(key, iv, ptBytes)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	resultCt, encryptError := cbcEnc.CbcEncrypt(ptBytes)
 	if encryptError != nil {
 		t.Errorf("Error decrypting: %v", encryptError)
 	}
@@ -178,7 +180,9 @@ func TestCbcDecrypt(t *testing.T) {
 
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)
-	resultPt, decryptError := CbcDecrypt(key, iv, ctBytes)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	resultPt, decryptError := cbcEnc.CbcDecrypt(ctBytes)
 	if decryptError != nil {
 		t.Errorf("Error decrypting: %v", decryptError)
 	}

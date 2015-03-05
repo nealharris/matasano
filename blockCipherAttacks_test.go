@@ -176,8 +176,10 @@ func TestForgeAdminCiphertextCtr(t *testing.T) {
 }
 
 func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
-	keyBytes, _ := hex.DecodeString(bitFlipKey)
-	pt, _ := CbcDecrypt(keyBytes, iv, ct)
+	key, _ := hex.DecodeString(bitFlipKey)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	pt, _ := cbcEnc.CbcDecrypt(ct)
 	stripped, err := StripPKCS7Padding(pt)
 
 	if err != nil {
@@ -231,8 +233,10 @@ func TestPaddingOracleAttack(t *testing.T) {
 		t.Errorf("error while performing padding oracle attack: %v", paddingOracleError)
 	}
 
-	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
-	expectedPt, decryptErr := CbcDecrypt(keyBytes, iv, ct)
+	key, _ := hex.DecodeString(paddingOracleKeyString)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	expectedPt, decryptErr := cbcEnc.CbcDecrypt(ct)
 	if decryptErr != nil {
 		t.Errorf("error decrypting: %v", decryptErr)
 	}

@@ -300,8 +300,8 @@ func PKCS7Pad(b []byte, size int) []byte {
 // resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
 // length; otherwise an error will be returned.  Note that the iv is not
 // returned as part of the ciphertext.
-func CbcEncrypt(key, iv, pt []byte) ([]byte, error) {
-	cipher, keyError := aes.NewCipher(key)
+func (enc *CbcEncryptor) CbcEncrypt(pt []byte) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(enc.key)
 	if keyError != nil {
 		return nil, keyError
 	}
@@ -314,7 +314,7 @@ func CbcEncrypt(key, iv, pt []byte) ([]byte, error) {
 	paddedPt := make([]byte, numBlocks*16)
 	copy(paddedPt, pt)
 
-	nextXor := iv
+	nextXor := enc.iv
 
 	var xored []byte
 	for i := 0; i < numBlocks; i++ {
@@ -331,8 +331,8 @@ func CbcEncrypt(key, iv, pt []byte) ([]byte, error) {
 // resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
 // length; otherwise an error will be returned.  Note that the iv is taken as
 // a separate argument from the ciphertext.
-func CbcDecrypt(key, iv, ct []byte) ([]byte, error) {
-	cipher, keyError := aes.NewCipher(key)
+func (enc *CbcEncryptor) CbcDecrypt(ct []byte) ([]byte, error) {
+	cipher, keyError := aes.NewCipher(enc.key)
 	if keyError != nil {
 		return nil, keyError
 	}
@@ -351,7 +351,7 @@ func CbcDecrypt(key, iv, ct []byte) ([]byte, error) {
 			xored, _ := Xor(preXor, ct[16*(i-1):16*i])
 			copy(pt[16*i:16*(i+1)], xored)
 		} else {
-			xored, _ := Xor(preXor, iv)
+			xored, _ := Xor(preXor, enc.iv)
 			copy(pt[0:16], xored)
 		}
 	}
@@ -426,6 +426,12 @@ const (
 type CtrEncryptor struct {
 	key   []byte
 	nonce uint64
+}
+
+// CbcEncryptor provides AES encryption in Ctr mode.
+type CbcEncryptor struct {
+	key []byte
+	iv  []byte
 }
 
 func (enc *CtrEncryptor) edit(ct []byte, offset int, newPlaintext []byte) ([]byte, error) {
