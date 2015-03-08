@@ -271,3 +271,18 @@ func TestAttackRandomWriteReEncrypt(t *testing.T) {
 		t.Errorf("guessed %v, but expected %v", guessedPt, pt)
 	}
 }
+
+func TestAttackIvEqualsKeyCbc(t *testing.T) {
+	key := make([]byte, 16)
+	cryptorand.Read(key)
+	cbcEnc := CbcEncryptor{key, key}
+
+	guessedKey, err := cbcEnc.AttackIvEqualsKeyCbc()
+	if err != nil {
+		t.Errorf("error guessing key: %v", err)
+	}
+
+	if bytes.Compare(guessedKey, key) != 0 {
+		t.Errorf("guessed %v, but expected %v", guessedKey, key)
+	}
+}

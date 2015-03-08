@@ -654,3 +654,30 @@ func (enc *CtrEncryptor) AttackRandomWriteReEncrypt(ct []byte) ([]byte, error) {
 
 	return Xor(key[0:len(ct)], ct)
 }
+
+// AttackIvEqualsKeyCbc performs the attack described at
+// http://cryptopals.com/sets/4/challenges/27/
+// It assumes the CbcEncryptor was defined with key == iv.
+//
+// Note that I didn't bother with throwing a parse exception
+// for high-ASCII values.
+func (enc *CbcEncryptor) AttackIvEqualsKeyCbc() ([]byte, error) {
+	pt := make([]byte, 48)
+	ct, encryptError := enc.CbcEncrypt(pt)
+	if encryptError != nil {
+		return nil, encryptError
+	}
+
+	firstCtBlock := ct[0:16]
+	tamperedCt := append(append(firstCtBlock, make([]byte, 16)...), firstCtBlock...)
+
+	bogusPt, decryptError := enc.CbcDecrypt(tamperedCt)
+	if decryptError != nil {
+		return nil, decryptError
+	}
+
+	firstPtBlock := bogusPt[0:16]
+	thirdPtBlock := bogusPt[32:48]
+
+	return Xor(firstPtBlock, thirdPtBlock)
+}
