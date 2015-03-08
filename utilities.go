@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+
+	"github.com/nealharris/sha1"
 )
 
 // ReadB64File takes the path to a file of base64 encoded data, reads the file
@@ -452,4 +454,11 @@ func (enc *CtrEncryptor) edit(ct []byte, offset int, newPlaintext []byte) ([]byt
 	}
 
 	return modifedCt, nil
+}
+
+// BadMac implements an intentionally insecure keyed hash function, as described
+// at https://golang.org/src/crypto/sha1/sha1.go
+func BadMac(key, data []byte) [20]byte {
+	input := append(key, data...)
+	return sha1.Sum(input)
 }
