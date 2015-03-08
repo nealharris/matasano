@@ -176,8 +176,10 @@ func TestForgeAdminCiphertextCtr(t *testing.T) {
 }
 
 func CbcBitFlipIsAdmin(ct, iv []byte) (bool, error) {
-	keyBytes, _ := hex.DecodeString(bitFlipKey)
-	pt, _ := CbcDecrypt(keyBytes, iv, ct)
+	key, _ := hex.DecodeString(bitFlipKey)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	pt, _ := cbcEnc.CbcDecrypt(ct)
 	stripped, err := StripPKCS7Padding(pt)
 
 	if err != nil {
@@ -231,8 +233,10 @@ func TestPaddingOracleAttack(t *testing.T) {
 		t.Errorf("error while performing padding oracle attack: %v", paddingOracleError)
 	}
 
-	keyBytes, _ := hex.DecodeString(paddingOracleKeyString)
-	expectedPt, decryptErr := CbcDecrypt(keyBytes, iv, ct)
+	key, _ := hex.DecodeString(paddingOracleKeyString)
+	cbcEnc := CbcEncryptor{key, iv}
+
+	expectedPt, decryptErr := cbcEnc.CbcDecrypt(ct)
 	if decryptErr != nil {
 		t.Errorf("error decrypting: %v", decryptErr)
 	}
@@ -265,5 +269,20 @@ func TestAttackRandomWriteReEncrypt(t *testing.T) {
 
 	if bytes.Compare(guessedPt, pt) != 0 {
 		t.Errorf("guessed %v, but expected %v", guessedPt, pt)
+	}
+}
+
+func TestAttackIvEqualsKeyCbc(t *testing.T) {
+	key := make([]byte, 16)
+	cryptorand.Read(key)
+	cbcEnc := CbcEncryptor{key, key}
+
+	guessedKey, err := cbcEnc.AttackIvEqualsKeyCbc()
+	if err != nil {
+		t.Errorf("error guessing key: %v", err)
+	}
+
+	if bytes.Compare(guessedKey, key) != 0 {
+		t.Errorf("guessed %v, but expected %v", guessedKey, key)
 	}
 }
