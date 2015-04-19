@@ -2,8 +2,11 @@ package matasano
 
 import (
 	"bytes"
+	"math/big"
+	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 )
 import (
 	"encoding/base64"
@@ -253,5 +256,45 @@ func TestTranspose(t *testing.T) {
 
 	if !reflect.DeepEqual(transposed, expected) {
 		t.Errorf("expected %v, but got %v", expected, transposed)
+	}
+}
+
+const bigP = "ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd3a431b302b0a6df25f14374fe1356d6d51c245e485b576625e7ec6f44c42e9a637ed6b0bff5cb6f406b7edee386bfb5a899fa5ae9f24117c4b1fe649286651ece45b3dc2007cb8a163bf0598da48361c55d39a69163fa8fd24cf5f83655d23dca3ad961c62f356208552bb9ed529077096966d670c354e4abc9804f1746c08ca237327ffffffffffffffff"
+
+func TestDiffieHelman(t *testing.T) {
+	pBytes, decodeErr := hex.DecodeString(bigP)
+	if decodeErr != nil {
+		t.Errorf("error decoding bigP hex string")
+	}
+
+	p := big.NewInt(0)
+	p.SetBytes(pBytes)
+
+	if !p.ProbablyPrime(10) {
+		t.Errorf("p isn't prime")
+	}
+
+	g := big.NewInt(2)
+
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s)
+
+	a := big.NewInt(0)
+	b := big.NewInt(0)
+
+	a.Rand(r, p)
+	b.Rand(r, p)
+
+	dh1 := DiffieHelman{p, g, a}
+	dh2 := DiffieHelman{p, g, b}
+
+	A := dh1.PubKey()
+	B := dh2.PubKey()
+
+	sk1 := dh1.SessionKey(B)
+	sk2 := dh2.SessionKey(A)
+
+	if bytes.Compare(sk1[:], sk2[:]) != 0 {
+		t.Errorf("session keys do not agree.")
 	}
 }
