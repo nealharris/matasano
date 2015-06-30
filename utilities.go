@@ -3,14 +3,12 @@ package matasano
 import (
 	"bytes"
 	"crypto/aes"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 
 	"github.com/nealharris/sha1"
 )
@@ -333,8 +331,8 @@ func (enc *CbcEncryptor) CbcEncrypt(pt []byte) ([]byte, error) {
 // CbcDecrypt takes byte arrays for key, iv, and ciphertext,
 // decrypts the plaintext with the key using AES in cbc mode, and returns the
 // resulting ciphertext. The key-length must be either 16, 24, or 32 bytes in
-// length; otherwise an error will be returned.  Note that the iv is taken as
-// a separate argument from the ciphertext.
+// length; otherwise an error will be returned.  Note that the iv is not passed
+// as an argument.
 func (enc *CbcEncryptor) CbcDecrypt(ct []byte) ([]byte, error) {
 	cipher, keyError := aes.NewCipher(enc.key)
 	if keyError != nil {
@@ -432,7 +430,7 @@ type CtrEncryptor struct {
 	nonce uint64
 }
 
-// CbcEncryptor provides AES encryption in Ctr mode.
+// CbcEncryptor provides AES encryption in CBC mode.
 type CbcEncryptor struct {
 	key []byte
 	iv  []byte
@@ -463,28 +461,4 @@ func (enc *CtrEncryptor) edit(ct []byte, offset int, newPlaintext []byte) ([]byt
 func BadMac(key, data []byte) [20]byte {
 	input := append(key, data...)
 	return sha1.Sum(input)
-}
-
-// DiffieHelman provides Diffie-Helman key exchange
-type DiffieHelman struct {
-	p *big.Int
-	g *big.Int
-	a *big.Int
-}
-
-// PubKey computes and returns the instance's public key (g**a mod p).
-func (dh *DiffieHelman) PubKey() *big.Int {
-	pubKey := big.NewInt(0)
-	pubKey.Exp(dh.g, dh.a, dh.p)
-
-	return pubKey
-}
-
-// SessionKey performs Diffie-Helman key exchange.  It takes any public key as
-// an argument, computes and returns a 256-bit session key.
-func (dh *DiffieHelman) SessionKey(B *big.Int) [sha256.Size]byte {
-	sessionKey := big.NewInt(0).Exp(B, dh.a, dh.p)
-	sessionKeyBytes := sessionKey.Bytes()
-
-	return sha256.Sum256(sessionKeyBytes)
 }
